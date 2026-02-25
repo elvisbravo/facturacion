@@ -36,7 +36,10 @@ function initDataTable() {
     table = $('#productsTable').DataTable({
         ajax: {
             url: '/productos/listar',
-            dataSrc: ''
+            dataSrc: 'data',
+            data: function (d) {
+                d.almacen_id = $('#warehouseFilter').val();
+            }
         },
         columns: [
             {
@@ -47,9 +50,10 @@ function initDataTable() {
             {
                 data: null,
                 render: function (data, type, row) {
+                    const imgPath = row.imagen_producto ? `/uploads/productos/${row.imagen_producto}` : '/uploads/productos/producto.png';
                     return `
                         <div class="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                            <img class="w-full h-full object-cover" src="${row.imagen || 'https://via.placeholder.com/40'}" alt="${row.nombre_producto}">
+                            <img class="w-full h-full object-cover" src="${imgPath}" alt="${row.nombre_producto}" onerror="this.src='https://via.placeholder.com/40?text=PS'">
                         </div>
                     `;
                 }
@@ -68,7 +72,7 @@ function initDataTable() {
                 className: 'px-6 py-3 text-sm text-slate-600 dark:text-slate-400'
             },
             {
-                data: 'precio_venta_con_igv',
+                data: 'precio_venta',
                 render: (data) => `S/ ${parseFloat(data || 0).toFixed(2)}`,
                 className: 'px-6 py-3 text-sm font-bold text-slate-900 dark:text-white text-center'
             },
@@ -125,12 +129,18 @@ function loadCategories() {
             selects.forEach(select => {
                 if (select) {
                     const currentVal = select.value;
-                    const defaultText = select.id === 'categoryFilter' ? 'Todas las Categorías' : 'Seleccionar Categoría';
-                    select.innerHTML = `<option value="">${defaultText}</option>`;
+                    const isFilter = select.id === 'categoryFilter';
+                    const defaultText = isFilter ? 'Todas las Categorías' : 'Seleccionar Categoría';
+                    const defaultValue = isFilter ? '0' : '';
+
+                    select.innerHTML = `<option value="${defaultValue}">${defaultText}</option>`;
                     data.forEach(cat => {
                         select.innerHTML += `<option value="${cat.id}">${cat.nombre_categoria}</option>`;
                     });
-                    select.value = currentVal;
+
+                    if (currentVal) {
+                        select.value = currentVal;
+                    }
                 }
             });
         });
@@ -155,6 +165,57 @@ function loadUnits() {
         });
 }
 
+// Function to load storage locations (almacenes) into select
+function loadAlmacenes() {
+    fetch('/almacen/listar')
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === 'success') {
+                const modalSelect = document.getElementById('prod_almacen');
+                const filterSelect = document.getElementById('warehouseFilter');
+
+                if (modalSelect) {
+                    const currentVal = modalSelect.value;
+                    modalSelect.innerHTML = '<option value="">Seleccionar Almacén</option>';
+                    res.data.forEach(almacen => {
+                        modalSelect.innerHTML += `<option value="${almacen.id}">${almacen.nombre}</option>`;
+                    });
+                    modalSelect.value = currentVal;
+                }
+
+                if (filterSelect) {
+                    const currentFilter = filterSelect.value;
+                    filterSelect.innerHTML = '<option value="0">Todos los Almacenes</option>';
+                    res.data.forEach(almacen => {
+                        filterSelect.innerHTML += `<option value="${almacen.id}">${almacen.nombre}</option>`;
+                    });
+                    if (currentFilter) {
+                        filterSelect.value = currentFilter;
+                    }
+                }
+            }
+        });
+}
+
+// Function to load tax types (tipo IGV) into select
+function loadTaxTypes() {
+    fetch('/tipo_afectacion_igv/listar')
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === 'success') {
+                const select = document.getElementById('prod_tipo_igv');
+                if (select) {
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">Seleccionar Tipo IGV</option>';
+                    res.data.forEach(tax => {
+                        select.innerHTML += `<option value="${tax.id_tipoafectacionigv}">${tax.descripcion}</option>`;
+                    });
+                    select.value = currentVal || '10'; // Default to 10 if no value
+                }
+            }
+        });
+}
+
 // Presentation Row Generation
 function addPresentationRow(data = {}) {
     const tbody = document.getElementById("presentationsTableBody");
@@ -166,10 +227,10 @@ function addPresentationRow(data = {}) {
             <input type="text" name="p_nombre[]" value="${data.nombre || ''}" class="w-full bg-white dark:bg-slate-800 border-none p-0 text-xs focus:ring-0" placeholder="Ej: Bolsa x50">
         </td>
         <td class="px-3 py-2">
-            <input type="number" name="p_factor[]" value="${data.factor || '1'}" class="w-12 mx-auto bg-white dark:bg-slate-800 border-none p-0 text-xs text-center focus:ring-0" placeholder="1">
+            <input type="number" step="any" name="p_factor[]" value="${data.factor || '1'}" class="w-12 mx-auto bg-white dark:bg-slate-800 border-none p-0 text-xs text-center focus:ring-0" placeholder="1">
         </td>
         <td class="px-3 py-2">
-            <input type="number" step="0.01" name="p_precio[]" value="${data.precio || ''}" class="w-16 bg-white dark:bg-slate-800 border-none p-0 text-xs focus:ring-0 font-bold" placeholder="0.00">
+            <input type="number" step="any" name="p_precio[]" value="${data.precio || ''}" class="w-16 bg-white dark:bg-slate-800 border-none p-0 text-xs focus:ring-0 font-bold" placeholder="0.00">
         </td>
         <td class="px-3 py-2">
             <input type="text" name="p_sku[]" value="${data.sku || ''}" class="w-full bg-white dark:bg-slate-800 border-none p-0 text-xs focus:ring-0 font-mono" placeholder="775...">
@@ -207,6 +268,8 @@ document.addEventListener("DOMContentLoaded", function () {
     initDataTable();
     loadCategories();
     loadUnits();
+    loadAlmacenes();
+    loadTaxTypes();
 
     // Initialize Select2
     $('.select2-search').select2({
@@ -260,6 +323,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // Category Filter
     $('#categoryFilter').on('change', function () {
         table.column(3).search(this.options[this.selectedIndex].text === 'Todas las Categorías' ? '' : this.options[this.selectedIndex].text).draw();
+    });
+
+    // Warehouse Filter
+    $('#warehouseFilter').on('change', function () {
+        table.ajax.reload();
     });
 
     // Handle Edit Buttons (Requires loading all fields)

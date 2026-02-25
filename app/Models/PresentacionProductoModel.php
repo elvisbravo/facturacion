@@ -13,7 +13,7 @@ class PresentacionProductoModel extends Model
 
     protected $returnType     = 'array';
 
-    protected $allowedFields = ['id', 'producto_id', 'nombre', 'estado', 'codigo_barras', 'precio_con_igv', 'precio_sin_igv', 'unidad_medida_id', 'factor_conversion'];
+    protected $allowedFields = ['id', 'producto_id', 'nombre', 'estado', 'codigo_barras', 'precio_con_igv', 'precio_sin_igv', 'precio_compra', 'unidad_medida_id', 'factor_conversion', 'precio_compra'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

@@ -28,3 +28,7 @@ $routes->post('productos/guardar', 'Productos::guardarProducto');
 $routes->get('productos/delete/(:num)', 'Productos::deleteProducto/$1');
 
 $routes->get('unidad_medida/listar', 'UnidadMedida::listar');
+
+$routes->get('almacen/listar', 'Almacen::listar');
+
+$routes->get('tipo_afectacion_igv/listar', 'TipoAfectacionIgv::listar');

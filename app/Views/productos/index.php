@@ -249,9 +249,14 @@
                 <div class="h-4 w-px bg-slate-300 dark:bg-slate-700 hidden md:block"></div>
 
                 <div class="flex gap-2">
+                    <select id="warehouseFilter"
+                        class="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-xs py-1.5 focus:ring-primary focus:border-primary outline-none px-2">
+                        <option value="0">Todos los Almacenes</option>
+                        <!-- Warehouses will be loaded here -->
+                    </select>
                     <select id="categoryFilter"
                         class="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-xs py-1.5 focus:ring-primary focus:border-primary outline-none px-2">
-                        <option value="">Todas las Categorías</option>
+                        <option value="0">Todas las Categorías</option>
                         <!-- Categories will be loaded here -->
                     </select>
                 </div>
@@ -321,7 +326,7 @@
             </button>
         </div>
         <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
-            <form id="formProducto" class="space-y-6">
+            <form id="formProducto" class="space-y-6" enctype="multipart/form-data">
                 <input type="hidden" id="id_prod" name="id" value="0">
 
                 <!-- General Info Section -->
@@ -351,6 +356,12 @@
                             <input id="prod_nombre" name="nombre" type="text"
                                 class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2.5 px-3 focus:ring-primary focus:border-primary outline-none transition-all"
                                 placeholder="Nombre completo del producto..." required />
+                        </div>
+                        <!-- Product Image -->
+                        <div class="md:col-span-12 space-y-1.5">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase">Imagen del Producto (Opcional)</label>
+                            <input id="prod_imagen" name="imagen_producto" type="file" accept="image/*"
+                                class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all" />
                         </div>
                     </div>
                 </div>
@@ -384,9 +395,7 @@
                         <label class="block text-[11px] font-bold text-slate-500 uppercase">Almacén</label>
                         <select id="prod_almacen" name="almacen"
                             class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2.5 px-3 focus:ring-primary focus:border-primary outline-none transition-all">
-                            <option value="Almacén Central">Almacén Central</option>
-                            <option value="Almacén Secundario">Almacén Secundario</option>
-                            <option value="Oficina Principal">Oficina Principal</option>
+                            <option value="">Cargando almacenes...</option>
                         </select>
                     </div>
                     <!-- Money -->
@@ -415,10 +424,7 @@
                             <label class="block text-[11px] font-bold text-slate-500 uppercase">Tipo de IGV</label>
                             <select id="prod_tipo_igv" name="tipo_igv"
                                 class="w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary focus:border-primary outline-none">
-                                <option value="10">Gravado - Operación Onerosa</option>
-                                <option value="20">Exonerado - Operación Onerosa</option>
-                                <option value="30">Inafecto - Operación Onerosa</option>
-                                <option value="17">Gravado - IVAP</option>
+                                <option value="">Cargando tipos...</option>
                             </select>
                         </div>
                         <!-- Afecto a ICBPER -->
@@ -445,7 +451,7 @@
                             <label class="block text-[11px] font-bold text-slate-500 uppercase">P. Compra</label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">COSTO</span>
-                                <input id="prod_precio_compra" name="precio_compra" type="number" step="0.01"
+                                <input id="prod_precio_compra" name="precio_compra" type="number" step="any"
                                     class="w-full pl-14 pr-3 py-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-primary focus:border-primary outline-none"
                                     placeholder="0.00" />
                             </div>
@@ -455,7 +461,7 @@
                             <label class="block text-[11px] font-bold text-primary uppercase">P. Venta (Incl. IGV)</label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">TOTAL</span>
-                                <input id="prod_precio_venta_con_igv" name="precio_venta_con_igv" type="number" step="0.01"
+                                <input id="prod_precio_venta_con_igv" name="precio_venta_con_igv" type="number" step="any"
                                     class="w-full pl-14 pr-3 py-2.5 bg-white dark:bg-slate-800 border-primary/30 dark:border-primary/20 rounded-lg text-sm focus:ring-primary focus:border-primary outline-none font-bold"
                                     placeholder="0.00" />
                             </div>
@@ -465,7 +471,7 @@
                             <label class="block text-[11px] font-bold text-slate-500 uppercase">P. Venta (Sin IGV)</label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">BASE</span>
-                                <input id="prod_precio_venta_sin_igv" name="precio_venta_sin_igv" type="number" step="0.01"
+                                <input id="prod_precio_venta_sin_igv" name="precio_venta_sin_igv" type="number" step="any"
                                     class="w-full pl-14 pr-3 py-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-primary focus:border-primary outline-none font-medium"
                                     placeholder="0.00" />
                             </div>
@@ -473,7 +479,7 @@
                         <!-- Weight -->
                         <div class="space-y-1.5">
                             <label class="block text-[11px] font-bold text-slate-500 uppercase">Peso (KG)</label>
-                            <input id="prod_peso" name="peso" type="number" step="0.001"
+                            <input id="prod_peso" name="peso" type="number" step="any"
                                 class="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-primary focus:border-primary outline-none"
                                 placeholder="0.000" />
                         </div>

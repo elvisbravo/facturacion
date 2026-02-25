@@ -13,7 +13,7 @@ class InventarioModel extends Model
 
     protected $returnType     = 'array';
 
-    protected $allowedFields = ['id', 'almacen_id', 'producto_id', 'stock_actual', 'stock_minimo', 'stock_maximo', 'tipo_envio_sunat'];
+    protected $allowedFields = ['id', 'almacen_id', 'producto_id', 'stock_actual', 'stock_minimo', 'stock_maximo', 'tipo_envio_sunat', 'usuario_id'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

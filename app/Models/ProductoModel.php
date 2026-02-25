@@ -21,7 +21,8 @@ class ProductoModel extends Model
         'nombre_producto',
         'codigo_moneda',
         'unidad_medida_id',
-        'estado'
+        'estado',
+        'imagen_producto'
     ];
 
     protected $useTimestamps = true;

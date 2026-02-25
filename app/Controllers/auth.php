@@ -24,16 +24,22 @@ class Auth extends BaseController
         }
 
         $usuariosModel = new UsuariosModel();
-        $usuario = $usuariosModel->join('perfil', 'perfil.id = usuarios.perfil_id')->where('usuarios.usuario', $usuario)->first();
 
-        if (empty($usuario)) {
+        $user = $usuariosModel
+            ->select('usuarios.*, perfil.nombre_perfil, sucursales.tipo_envio_sunat')
+            ->join('perfil', 'perfil.id = usuarios.perfil_id')
+            ->join('sucursales', 'sucursales.id = usuarios.sucursal_id')
+            ->where('usuarios.usuario', $usuario)
+            ->first();
+
+        if (empty($user)) {
             return $this->response->setJSON([
                 "status" => "error",
                 "message" => "Usuario no encontrado"
             ]);
         }
 
-        if ($usuario['password'] != $password) {
+        if ($user['password'] != $password) {
             return $this->response->setJSON([
                 "status" => "error",
                 "message" => "Contraseña incorrecta"
@@ -42,12 +48,14 @@ class Auth extends BaseController
 
         $session = session();
         $session->set([
-            'id' => $usuario['id'],
-            'usuario' => $usuario['usuario'],
-            'nombres' => $usuario['nombres'],
-            'apellidos' => $usuario['apellidos'],
-            'rol' => $usuario['nombre_perfil'],
-            'rol_id' => $usuario['perfil_id'],
+            'id' => $user['id'],
+            'usuario' => $user['usuario'],
+            'nombres' => $user['nombres'],
+            'apellidos' => $user['apellidos'],
+            'rol' => $user['nombre_perfil'],
+            'rol_id' => $user['perfil_id'],
+            'sucursal_id' => $user['sucursal_id'],
+            'tipo_envio_sunat' => $user['tipo_envio_sunat'],
             'logged_in' => true
         ]);
 

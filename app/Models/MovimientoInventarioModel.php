@@ -13,7 +13,7 @@ class MovimientoInventarioModel extends Model
 
     protected $returnType     = 'array';
 
-    protected $allowedFields = ['id', 'producto_id', 'almacen_id ', 'tipo', 'cantidad', 'motivo', 'referencia_id', 'referencia_tipo', 'num_documento', 'tipo_envio_sunat'];
+    protected $allowedFields = ['id', 'producto_id', 'almacen_id', 'tipo', 'cantidad', 'motivo', 'referencia_id', 'referencia_tipo', 'num_documento', 'tipo_envio_sunat', 'usuario_id'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
