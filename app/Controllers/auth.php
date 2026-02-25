@@ -3,73 +3,57 @@
 namespace App\Controllers;
 
 use App\Models\UsuariosModel;
-use CodeIgniter\RESTful\ResourceController;
 
-class Auth extends ResourceController
+class Auth extends BaseController
 {
-    protected $format = 'json';
-
     public function login()
     {
-        try {
-            $data = json_decode($this->request->getBody(true));
+        return view('auth/login');
+    }
 
-            if (empty($data->usuario) || empty($data->password)) {
-                return $this->failValidationErrors('Faltan datos obligatorios');
-            }
+    public function acceder()
+    {
+        $usuario = $this->request->getPost('usuario');
+        $password = $this->request->getPost('password');
 
-            $usuario = new UsuariosModel();
-
-            $usuarios = $usuario->query("SELECT usuarios.id, usuarios.usuario, usuarios.nombres, usuarios.apellidos, perfil.id AS rol_id, perfil.nombre_perfil AS rol FROM usuarios INNER JOIN perfil ON usuarios.perfil_id = perfil.id WHERE usuarios.estado = 1 and usuarios.usuario = ? AND usuarios.password = ?", [$data->usuario, $data->password])->getRow();
-
-            if (empty($usuarios)) {
-                return $this->failNotFound('Usuario o contraseña incorrectos');
-            }
-
-            return $this->respond([
-                'status' => 200,
-                'mensaje' => 'Login exitoso',
-                'result' => $usuarios
+        if (empty($usuario) || empty($password)) {
+            return $this->response->setJSON([
+                "status" => "error",
+                "message" => "Usuario y contraseña son obligatorios"
             ]);
-        } catch (\Exception $e) {
-            return $this->failServerError('Error interno del servidor');
         }
-    }
 
-    public function show($id = null)
-    {
-        return $this->respond([
-            'id' => $id,
-            'nombre' => 'Cliente ' . $id
+        $usuariosModel = new UsuariosModel();
+        $usuario = $usuariosModel->join('perfil', 'perfil.id = usuarios.perfil_id')->where('usuarios.usuario', $usuario)->first();
+
+        if (empty($usuario)) {
+            return $this->response->setJSON([
+                "status" => "error",
+                "message" => "Usuario no encontrado"
+            ]);
+        }
+
+        if ($usuario['password'] != $password) {
+            return $this->response->setJSON([
+                "status" => "error",
+                "message" => "Contraseña incorrecta"
+            ]);
+        }
+
+        $session = session();
+        $session->set([
+            'id' => $usuario['id'],
+            'usuario' => $usuario['usuario'],
+            'nombres' => $usuario['nombres'],
+            'apellidos' => $usuario['apellidos'],
+            'rol' => $usuario['nombre_perfil'],
+            'rol_id' => $usuario['perfil_id'],
+            'logged_in' => true
         ]);
-    }
 
-    public function create()
-    {
-        $data = [];
-
-        return $this->respondCreated([
-            'mensaje' => 'Cliente creado',
-            'data' => $data
-        ]);
-    }
-
-    public function update($id = null)
-    {
-        $data = [];
-
-        return $this->respond([
-            'mensaje' => 'Cliente actualizado',
-            'id' => $id,
-            'data' => $data
-        ]);
-    }
-
-    public function delete($id = null)
-    {
-        return $this->respondDeleted([
-            'mensaje' => 'Cliente eliminado',
-            'id' => $id
+        return $this->response->setJSON([
+            "status" => "success",
+            "message" => "Login exitoso"
         ]);
     }
 }
