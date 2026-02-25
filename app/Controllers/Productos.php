@@ -91,11 +91,17 @@ class Productos extends BaseController
     {
         $tipoEnvio = session()->get('tipo_envio_sunat') ?? 'prueba';
         $almacen_id = $this->request->getGet('almacen_id');
+        $categoria_id = $this->request->getGet('categoria_id');
 
         try {
             $sqlAlmacen = "";
             if ($almacen_id != 0 && !empty($almacen_id)) {
                 $sqlAlmacen = " AND i.almacen_id = " . intval($almacen_id);
+            }
+
+            $sqlCategoria = "";
+            if ($categoria_id != 0 && !empty($categoria_id)) {
+                $sqlCategoria = " AND p.categoria_id = " . intval($categoria_id);
             }
 
             $producto = new ProductoModel();
@@ -120,8 +126,13 @@ class Productos extends BaseController
                     LEFT JOIN categoria_producto c ON c.id = p.categoria_id
                     LEFT JOIN sunat_unidadmedida sum ON sum.idunidad = p.unidad_medida_id
                     LEFT JOIN presentacion_producto pp ON pp.producto_id = p.id AND pp.factor_conversion = 1
-                    LEFT JOIN inventario i ON i.producto_id = p.id AND i.tipo_envio_sunat = '$tipoEnvio' $sqlAlmacen
-                    WHERE p.estado = 1 
+                    LEFT JOIN (
+                        SELECT producto_id, stock_actual, tipo_envio_sunat, almacen_id 
+                        FROM inventario 
+                        INNER JOIN almacenes ON almacenes.id = inventario.almacen_id
+                        WHERE almacenes.sucursal_id = " . intval(session()->get('sucursal_id')) . "
+                    ) i ON i.producto_id = p.id AND i.tipo_envio_sunat = '$tipoEnvio' $sqlAlmacen
+                    WHERE p.estado = 1 $sqlCategoria
                     GROUP BY p.id";
 
             $datos = $producto->query($sql)->getResultArray();

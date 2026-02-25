@@ -14,8 +14,10 @@ $routes->get('dashboard', 'Dashboard::admin');
 $routes->get('productos', 'Productos::index');
 
 $routes->get('ventas', 'Ventas::index');
+$routes->get('pos', 'Ventas::posVenta');
+$routes->get('ventas/ticket/(:num)', 'Ventas::ticket/$1');
 
-$routes->get('caja', 'Caja::index');
+$routes->get('caja-aperturar', 'Caja::aperturar');
 
 $routes->get('categorias', 'Productos::categorias');
 $routes->get('categorias/delete/(:num)', 'Productos::deleteCategoria/$1');
@@ -32,3 +34,10 @@ $routes->get('unidad_medida/listar', 'UnidadMedida::listar');
 $routes->get('almacen/listar', 'Almacen::listar');
 
 $routes->get('tipo_afectacion_igv/listar', 'TipoAfectacionIgv::listar');
+
+$routes->get('metodo_pago/listar', 'MetodoPago::listar');
+
+$routes->get('clientes/listar', 'Clientes::listar');
+$routes->post('clientes/buscar', 'Clientes::buscar');
+$routes->post('clientes/guardar', 'Clientes::guardar');
+$routes->get('clientes/tipos_documento', 'Clientes::getTiposDocumento');
