@@ -455,34 +455,52 @@
                         <div class="space-y-3">
                             <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tipo de Comprobante</label>
                             <div class="grid grid-cols-1 gap-2">
-                                <label
-                                    class="relative flex items-center p-4 border-2 border-primary bg-primary/5 rounded-xl cursor-pointer">
-                                    <input checked="" class="hidden" name="docType" type="radio" />
-                                    <span class="material-symbols-outlined text-primary mr-3">receipt_long</span>
-                                    <div class="flex-1">
-                                        <span class="block text-sm font-bold text-slate-900 dark:text-white">Boleta de Venta</span>
-                                        <span class="block text-xs text-slate-500">Uso para personas naturales</span>
-                                    </div>
-                                    <span class="material-symbols-outlined text-primary">check_circle</span>
-                                </label>
-                                <label
-                                    class="relative flex items-center p-4 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-                                    <input class="hidden" name="docType" type="radio" />
-                                    <span class="material-symbols-outlined text-slate-500 mr-3">business</span>
-                                    <div class="flex-1">
-                                        <span class="block text-sm font-bold text-slate-900 dark:text-white">Factura Electrónica</span>
-                                        <span class="block text-xs text-slate-500">Requiere RUC válido</span>
-                                    </div>
-                                </label>
-                                <label
-                                    class="relative flex items-center p-4 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-                                    <input class="hidden" name="docType" type="radio" />
-                                    <span class="material-symbols-outlined text-slate-500 mr-3">description</span>
-                                    <div class="flex-1">
-                                        <span class="block text-sm font-bold text-slate-900 dark:text-white">Nota de Venta</span>
-                                        <span class="block text-xs text-slate-500">Documento interno</span>
-                                    </div>
-                                </label>
+                                <?php
+                                $selectedIndex = 0;
+                                foreach ($tiposComprobante as $i => $t) {
+                                    if (strpos(strtoupper($t['descripcion']), 'BOLETA') !== false) {
+                                        $selectedIndex = $i;
+                                        break;
+                                    }
+                                }
+                                ?>
+                                <?php foreach ($tiposComprobante as $index => $tipo): ?>
+                                    <?php
+                                    $desc = strtoupper($tipo['descripcion']);
+                                    $icon = 'description';
+                                    $sub = '';
+                                    $isSelected = ($index === $selectedIndex);
+
+                                    if (strpos($desc, 'BOLETA') !== false) {
+                                        $icon = 'receipt_long';
+                                        $sub = 'Uso para personas naturales';
+                                    } elseif (strpos($desc, 'FACTURA') !== false) {
+                                        $icon = 'business';
+                                        $sub = 'Requiere RUC válido';
+                                    } else {
+                                        $sub = 'Documento interno';
+                                    }
+                                    ?>
+                                    <label
+                                        class="relative flex items-center p-4 border <?= $isSelected ? 'border-2 border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700' ?> rounded-xl cursor-pointer transition-all hover:bg-primary/5 group"
+                                        id="docTypeContainer_<?= $tipo['id_tipodoc_electronico'] ?>">
+                                        <input <?= $isSelected ? 'checked' : '' ?>
+                                            class="hidden"
+                                            name="docType"
+                                            type="radio"
+                                            value="<?= $tipo['id_tipodoc_electronico'] ?>"
+                                            data-es-factura="<?= strpos($desc, 'FACTURA') !== false ? 'true' : 'false' ?>"
+                                            data-es-boleta="<?= strpos($desc, 'BOLETA') !== false ? 'true' : 'false' ?>" />
+                                        <span class="material-symbols-outlined <?= $isSelected ? 'text-primary' : 'text-slate-500' ?> mr-3 group-hover:text-primary transition-colors"><?= $icon ?></span>
+                                        <div class="flex-1">
+                                            <span class="block text-sm font-bold text-slate-900 dark:text-white"><?= $tipo['descripcion'] ?></span>
+                                            <span class="block text-xs text-slate-500"><?= $sub ?></span>
+                                        </div>
+                                        <?php if ($isSelected): ?>
+                                            <span class="material-symbols-outlined text-primary check-icon">check_circle</span>
+                                        <?php endif; ?>
+                                    </label>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
@@ -603,6 +621,23 @@
         </div>
         <script>
             const BASE_URL = "<?= base_url() ?>";
+            <?php if (isset($cajaVencida) && $cajaVencida): ?>
+                document.addEventListener('DOMContentLoaded', () => {
+                    Swal.fire({
+                        title: '¡Caja Vencida!',
+                        text: 'La caja "<?= $cajaAbierta['nombre_caja'] ?>" ha superado su hora de cierre programada (<?= date('H:i', strtotime($cajaAbierta['hora_cierre'])) ?>). Debe cerrarla para continuar operando correctamente.',
+                        icon: 'warning',
+                        confirmButtonColor: '#13ec49',
+                        confirmButtonText: 'Ir a Gestión de Caja',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = BASE_URL + 'caja-aperturar';
+                        }
+                    });
+                });
+            <?php endif; ?>
         </script>
         <script src="<?= base_url('js/ventas/pos.js') ?>"></script>
 </body>

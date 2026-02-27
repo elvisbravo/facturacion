@@ -14,10 +14,15 @@ $routes->get('dashboard', 'Dashboard::admin');
 $routes->get('productos', 'Productos::index');
 
 $routes->get('ventas', 'Ventas::index');
+$routes->get('ventas/listar', 'Ventas::listar');
+$routes->get('ventas/detalle/(:num)', 'Ventas::detalle/$1');
 $routes->get('pos', 'Ventas::posVenta');
 $routes->get('ventas/ticket/(:num)', 'Ventas::ticket/$1');
+$routes->post('ventas/guardar', 'Ventas::guardar');
 
 $routes->get('caja-aperturar', 'Caja::aperturar');
+$routes->post('caja/abrir', 'Caja::abrir');
+$routes->post('caja/cerrar', 'Caja::cerrar');
 
 $routes->get('categorias', 'Productos::categorias');
 $routes->get('categorias/delete/(:num)', 'Productos::deleteCategoria/$1');

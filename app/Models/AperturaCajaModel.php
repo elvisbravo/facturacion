@@ -13,7 +13,7 @@ class AperturaCajaModel extends Model
 
     protected $returnType     = 'array';
 
-    protected $allowedFields = ['id', 'caja_id', 'usuario_id ', 'fecha_apertura', 'monto_inicial', 'fecha_cierre', 'monto_cierre', 'estado'];
+    protected $allowedFields = ['id', 'caja_id', 'usuario_id', 'fecha_apertura', 'monto_inicial', 'fecha_cierre', 'monto_cierre', 'estado'];
 
     protected $useTimestamps = false;
     protected $createdField  = 'created_at';

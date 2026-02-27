@@ -31,8 +31,15 @@ class Clientes extends BaseController
     {
         try {
             $clientes = new ClientesModel();
-
-            $datos = $clientes->where('estado', 1)->like('nombres', $this->request->getPost('nombres'))->orLike('numero_documento', $this->request->getPost('nombres'))->orderBy('nombres', 'ASC')->findAll();
+            $datos = $clientes->select('clientes.*, sunat_tipodocidentidad.nombre as tipo_doc_nombre')
+                ->join('sunat_tipodocidentidad', 'sunat_tipodocidentidad.id_tipodocidentidad = clientes.id_tipo_documento')
+                ->where('clientes.estado', 1)
+                ->groupStart()
+                ->like('clientes.nombres', $this->request->getPost('nombres'))
+                ->orLike('clientes.numero_documento', $this->request->getPost('nombres'))
+                ->groupEnd()
+                ->orderBy('clientes.nombres', 'ASC')
+                ->findAll();
 
             return $this->response->setJSON([
                 'status' => 'success',
@@ -73,13 +80,18 @@ class Clientes extends BaseController
                 $message = 'Cliente actualizado correctamente';
             }
 
+            $tipoDoc = new \App\Models\TipoIdentidadModel();
+            $tipoDocData = $tipoDoc->find($data['id_tipo_documento']);
+
             return $this->response->setJSON([
                 'status'  => 'success',
                 'message' => $message,
                 'data'    => [
                     'id' => $clientId,
                     'numero_documento' => $data['numero_documento'],
-                    'nombres' => $data['nombres']
+                    'nombres' => $data['nombres'],
+                    'id_tipo_documento' => $data['id_tipo_documento'],
+                    'tipo_doc_nombre' => $tipoDocData['nombre'] ?? 'DNI'
                 ]
             ]);
         } catch (\Exception $e) {

@@ -89,7 +89,10 @@ class Productos extends BaseController
 
     public function listarProductos()
     {
+        $session_sucursal = session()->get('sucursal_id');
+        $sucursal_id = !empty($session_sucursal) ? $session_sucursal : 1;
         $tipoEnvio = session()->get('tipo_envio_sunat') ?? 'prueba';
+
         $almacen_id = $this->request->getGet('almacen_id');
         $categoria_id = $this->request->getGet('categoria_id');
 
@@ -130,7 +133,7 @@ class Productos extends BaseController
                         SELECT producto_id, stock_actual, tipo_envio_sunat, almacen_id 
                         FROM inventario 
                         INNER JOIN almacenes ON almacenes.id = inventario.almacen_id
-                        WHERE almacenes.sucursal_id = " . intval(session()->get('sucursal_id')) . "
+                        WHERE almacenes.sucursal_id = $sucursal_id
                     ) i ON i.producto_id = p.id AND i.tipo_envio_sunat = '$tipoEnvio' $sqlAlmacen
                     WHERE p.estado = 1 $sqlCategoria
                     GROUP BY p.id";

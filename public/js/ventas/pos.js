@@ -37,6 +37,8 @@ let currentCategoria = 0;
 let productList = [];
 
 let selectedCustomerIdVal = 1;
+let selectedCustomerTipoDocIdVal = 1; // Default DNI/Varios
+let selectedCustomerTipoDocNombreVal = "DNI";
 
 // Elements
 const cartItemsContainer = document.getElementById("cartItemsContainer");
@@ -419,28 +421,35 @@ document.querySelectorAll('input[name="docType"]').forEach((radio) => {
         // Remove selection class from all
         document.querySelectorAll('input[name="docType"]').forEach((r) => {
             const container = r.closest("label");
-            container.classList.remove("border-primary", "bg-primary/5");
-            container.classList.add(
-                "border-slate-200",
-                "dark:border-slate-700",
-            );
-            const check = container.querySelector(
-                ".material-symbols-outlined:last-child",
-            );
-            if (check && check.textContent === "check_circle") check.remove();
+            container.classList.remove("border-primary", "bg-primary/5", "border-2");
+            container.classList.add("border-slate-200", "dark:border-slate-700");
+
+            // Reset icon color
+            const icon = container.querySelector(".material-symbols-outlined:first-of-type");
+            if (icon) {
+                icon.classList.remove("text-primary");
+                icon.classList.add("text-slate-500");
+            }
+
+            const check = container.querySelector(".check-icon");
+            if (check) check.remove();
         });
 
         // Add to selected
         const container = e.target.closest("label");
-        container.classList.add("border-primary", "bg-primary/5");
-        container.classList.remove(
-            "border-slate-200",
-            "dark:border-slate-700",
-        );
+        container.classList.add("border-primary", "bg-primary/5", "border-2");
+        container.classList.remove("border-slate-200", "dark:border-slate-700");
+
+        // Active icon color
+        const icon = container.querySelector(".material-symbols-outlined:first-of-type");
+        if (icon) {
+            icon.classList.add("text-primary");
+            icon.classList.remove("text-slate-500");
+        }
 
         // Add check icon
         const checkIcon = document.createElement("span");
-        checkIcon.className = "material-symbols-outlined text-primary";
+        checkIcon.className = "material-symbols-outlined text-primary check-icon";
         checkIcon.textContent = "check_circle";
         container.appendChild(checkIcon);
     });
@@ -466,8 +475,11 @@ window.searchCustomer = function (query) {
                 customerSearchResults.innerHTML = res.data
                     .map(
                         (c) => `
-                    <div onclick="selectCustomer('${c.id}', '${c.numero_documento}', '${c.nombres}')" class="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0">
-                        <p class="text-xs font-bold text-slate-500">${c.numero_documento}</p>
+                    <div onclick="selectCustomer('${c.id}', '${c.numero_documento}', '${c.nombres}', '${c.id_tipo_documento}', '${c.tipo_doc_nombre}')" class="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 uppercase">${c.tipo_doc_nombre}</span>
+                            <span class="text-xs font-bold text-slate-400">${c.numero_documento}</span>
+                        </div>
                         <p class="text-sm font-bold text-slate-800 dark:text-slate-200">${c.nombres}</p>
                     </div>
                 `,
@@ -483,18 +495,22 @@ window.searchCustomer = function (query) {
         });
 };
 
-window.selectCustomer = function (id, documento, nombres) {
+window.selectCustomer = function (id, documento, nombres, id_tipo_documento, tipo_doc_nombre) {
     selectedCustomerIdVal = id;
+    selectedCustomerTipoDocIdVal = id_tipo_documento || 1;
+    selectedCustomerTipoDocNombreVal = tipo_doc_nombre || "DNI";
     selectedCustomerName.textContent = nombres;
-    selectedCustomerId.textContent = `ID: ${documento}`;
+    selectedCustomerId.textContent = `${selectedCustomerTipoDocNombreVal}: ${documento}`;
     customerSearchInput.value = "";
     customerSearchResults.classList.add("hidden");
 };
 
 window.resetCustomerSelection = function () {
     selectedCustomerIdVal = 1;
+    selectedCustomerTipoDocIdVal = 1;
+    selectedCustomerTipoDocNombreVal = "DNI";
     selectedCustomerName.textContent = "Cliente Varios";
-    selectedCustomerId.textContent = "ID: 00000001";
+    selectedCustomerId.textContent = "DNI: 00000001";
 };
 
 // Close dropdown when clicking outside
@@ -562,7 +578,7 @@ window.initCustomerForm = function () {
                 .then(res => {
                     if (res.status === 'success') {
                         const client = res.data;
-                        selectCustomer(client.id, client.numero_documento, client.nombres);
+                        selectCustomer(client.id, client.numero_documento, client.nombres, client.id_tipo_documento, client.tipo_doc_nombre);
                         closeCustomerModal();
                         alert(res.message);
                     } else {
@@ -612,12 +628,22 @@ window.loadWarehouses = function () {
                 ].filter(el => el !== null);
 
                 selectors.forEach(select => {
-                    res.data.forEach(almacen => {
+                    res.data.forEach((almacen, index) => {
                         const opt = document.createElement('option');
                         opt.value = almacen.id;
                         opt.textContent = almacen.nombre;
                         select.appendChild(opt);
+
+                        // Set first warehouse as default if currentAlmacen is 0
+                        if (index === 0 && currentAlmacen === 0) {
+                            currentAlmacen = almacen.id;
+                        }
                     });
+
+                    // Update selector value if currentAlmacen was set
+                    if (currentAlmacen !== 0) {
+                        select.value = currentAlmacen;
+                    }
 
                     select.addEventListener('change', (e) => {
                         const val = e.target.value;
@@ -773,6 +799,39 @@ window.renderPaymentButtons = function () {
 window.processPayment = function () {
     const total = totalValueElem.textContent;
 
+    // Validación de Factura con RUC (Dinámico)
+    const selectedDocRadio = document.querySelector('input[name="docType"]:checked');
+    const esFactura = selectedDocRadio ? selectedDocRadio.dataset.esFactura === 'true' : false;
+    const esBoleta = selectedDocRadio ? selectedDocRadio.dataset.esBoleta === 'true' : false;
+    const esClienteRUC = selectedCustomerTipoDocNombreVal.toUpperCase().includes("RUC");
+    const esClienteDNI = selectedCustomerTipoDocNombreVal.toUpperCase().includes("DNI");
+
+    // Obtener total numérico
+    const totalNum = parseFloat(totalValueElem.textContent.replace("S/ ", ""));
+
+    if (esFactura && !esClienteRUC) {
+        Swal.fire({
+            title: 'Cliente inválido',
+            text: `No se puede emitir una Factura a un cliente con ${selectedCustomerTipoDocNombreVal}. El cliente debe tener un RUC válido.`,
+            icon: 'warning',
+            confirmButtonColor: '#13ec49'
+        });
+        return;
+    }
+
+    // Validación Boleta >= 700 requiere identificación (DNI)
+    if (esBoleta && totalNum >= 700) {
+        if (!esClienteDNI || selectedCustomerIdVal == 1) {
+            Swal.fire({
+                title: 'Identificación requerida',
+                text: 'Para Boletas con monto mayor o igual a S/ 700.00, es obligatorio identificar al cliente con un DNI válido.',
+                icon: 'warning',
+                confirmButtonColor: '#13ec49'
+            });
+            return;
+        }
+    }
+
     Swal.fire({
         title: '¿Confirmar Pago?',
         text: `Se procesará una venta por un total de ${total}`,
@@ -794,26 +853,74 @@ window.processPayment = function () {
                 }
             });
 
-            // Simulate API delay
-            setTimeout(() => {
-                const randomId = Math.floor(Math.random() * 90000) + 10000;
+            // Preparar datos para el backend
+            const paymentMethods = [];
+            activePaymentMethods.forEach(id => {
+                const inp = document.getElementById(`${id}Input`);
+                if (inp) {
+                    paymentMethods.push({
+                        id: id,
+                        amount: parseFloat(inp.value) || 0
+                    });
+                }
+            });
 
-                Swal.fire({
-                    title: '¡Venta Exitosa!',
-                    text: `La transacción #${randomId} se ha completado correctamente.`,
-                    icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonColor: '#13ec49',
-                    confirmButtonText: '<span class="flex items-center gap-2"><span class="material-symbols-outlined">print</span> Imprimir Ticket</span>',
-                    cancelButtonText: 'Cerrar',
-                }).then((res) => {
-                    if (res.isConfirmed) {
-                        window.open(`${BASE_URL}/ventas/ticket/${randomId}`, '_blank');
+            const data = {
+                cart: cart,
+                paymentMethods: paymentMethods,
+                cliente_id: selectedCustomerIdVal,
+                docType_id: selectedDocRadio.value,
+                almacen_id: currentAlmacen
+            };
+
+            fetch(BASE_URL + '/ventas/guardar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        const venta_id = res.venta_id;
+
+                        Swal.fire({
+                            title: '¡Venta Exitosa!',
+                            text: res.message,
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonColor: '#13ec49',
+                            confirmButtonText: '<span class="flex items-center gap-2"><span class="material-symbols-outlined">print</span> Imprimir Ticket</span>',
+                            cancelButtonText: 'Cerrar',
+                        }).then((r) => {
+                            if (r.isConfirmed) {
+                                window.open(`${BASE_URL}/ventas/ticket/${venta_id}`, '_blank');
+                            }
+
+                            // Siempre limpiar y cerrar al finalizar el mensaje de éxito
+                            window.clearCart();
+                            window.closePaymentModal();
+                            window.resetCustomerSelection();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: res.message,
+                            icon: 'error',
+                            confirmButtonColor: '#13ec49'
+                        });
                     }
-                    window.clearCart();
-                    window.closePaymentModal();
+                })
+                .catch(err => {
+                    Swal.fire({
+                        title: 'Error Crítico',
+                        text: 'No se pudo procesar la venta. Verifique su conexión.',
+                        icon: 'error',
+                        confirmButtonColor: '#13ec49'
+                    });
                 });
-            }, 1500);
         }
     });
 };

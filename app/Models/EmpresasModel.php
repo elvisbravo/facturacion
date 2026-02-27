@@ -13,7 +13,7 @@ class EmpresasModel extends Model
 
     protected $returnType     = 'array';
 
-    protected $allowedFields = ['id', 'ruc', 'razon_social', 'direccion_fiscal', 'email', 'usuario_sol', 'clave_sol', 'pass_certificado', 'logo', 'estado'];
+    protected $allowedFields = ['id', 'ruc', 'razon_social', 'direccion_fiscal', 'email', 'usuario_sol', 'clave_sol', 'pass_certificado', 'logo', 'estado', 'nombre_comercial'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

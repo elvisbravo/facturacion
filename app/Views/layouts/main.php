@@ -114,7 +114,147 @@
             </div>
         </main>
     </div>
+
+    <!-- Modales de Caja -->
+    <div id="modalAperturaCaja" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all">
+            <div class="p-8">
+                <div class="size-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 mx-auto">
+                    <span class="material-symbols-outlined !text-4xl">lock_open</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 dark:text-white text-center mb-2">Apertura de Caja</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-center mb-8">Ingresa el monto inicial para comenzar el turno.</p>
+
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-widest text-slate-400">Caja Chica / Monto Inicial (S/)</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">S/</span>
+                            <input type="number" id="monto_inicial" step="0.01" value="0.00"
+                                class="w-full h-14 pl-10 pr-4 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-xl font-bold focus:ring-primary focus:border-primary transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-10">
+                    <button onclick="cerrarModalApertura()"
+                        class="flex-1 h-14 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                        Cancelar
+                    </button>
+                    <button onclick="ejecutarApertura()"
+                        class="flex-1 h-14 rounded-xl bg-primary text-slate-900 font-bold hover:shadow-lg hover:shadow-primary/30 transition-all">
+                        Abrir Caja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="<?= base_url('js/main.js') ?>"></script>
+    <script>
+        const baseUrl = '<?= base_url() ?>';
+
+        function abrirModalApertura() {
+            document.getElementById('modalAperturaCaja').classList.remove('hidden');
+        }
+
+        function cerrarModalApertura() {
+            document.getElementById('modalAperturaCaja').classList.add('hidden');
+        }
+
+        async function ejecutarApertura() {
+            const monto = document.getElementById('monto_inicial').value;
+
+            try {
+                const response = await fetch(`${baseUrl}/caja/abrir`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: `monto_inicial=${monto}`
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Caja Abierta!',
+                        text: result.message,
+                        confirmButtonText: 'Continuar'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un problema al procesar la solicitud.'
+                });
+            }
+        }
+
+        async function confirmarCerrarCaja() {
+            const result = await Swal.fire({
+                title: 'Cerrar Caja',
+                text: '¿Estás seguro de cerrar la caja actual?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#13ec49',
+                cancelButtonColor: '#f44336',
+                confirmButtonText: 'Sí, cerrar caja'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`${baseUrl}/caja/cerrar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: `monto_cierre=0`
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Caja Cerrada!',
+                            text: result.message,
+                            confirmButtonText: 'Continuar'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message
+                        });
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un problema al procesar la solicitud.'
+                    });
+                }
+            }
+        }
+    </script>
     <?= $this->renderSection('scripts') ?>
     <!-- Mobile Overlay -->
     <div

@@ -13,7 +13,7 @@ class CajaModel extends Model
 
     protected $returnType     = 'array';
 
-    protected $allowedFields = ['id', 'sucursal_id', 'nombre_caja', 'estado'];
+    protected $allowedFields = ['id', 'sucursal_id', 'nombre_caja', 'estado', 'hora_cierre'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
