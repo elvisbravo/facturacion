@@ -24,11 +24,11 @@
             <div class="text-right hidden sm:block">
                 <p
                     class="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    Cajero Principal
+                    <?= session()->get('nombres') . ' ' . session()->get('apellidos') ?>
                 </p>
                 <p
                     class="text-[10px] text-primary font-bold uppercase tracking-wider">
-                    Perfil
+                    <?= session()->get('rol') ?>
                 </p>
             </div>
             <div
@@ -60,7 +60,7 @@
             <div
                 class="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2"></div>
             <a
-                href="login.html"
+                href="<?= base_url('auth/salir') ?>"
                 class="flex items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
                 <span class="material-symbols-outlined text-lg">logout</span>
                 Salir

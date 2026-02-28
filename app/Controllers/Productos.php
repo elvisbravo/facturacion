@@ -250,6 +250,8 @@ class Productos extends BaseController
                     'referencia_tipo' => "Inicial",
                     'num_documento' => "",
                     'tipo_envio_sunat' => "produccion",
+                    'stock_anterior' => 0,
+                    'stock_actual' => $stockInicial,
                     'usuario_id' => $userId
                 ]);
 
@@ -263,6 +265,8 @@ class Productos extends BaseController
                     'referencia_tipo' => "Inicial",
                     'num_documento' => "",
                     'tipo_envio_sunat' => "prueba",
+                    'stock_anterior' => 0,
+                    'stock_actual' => $stockInicial,
                     'usuario_id' => $userId
                 ]);
 
@@ -311,5 +315,111 @@ class Productos extends BaseController
             'status' => 'success',
             'message' => 'Producto eliminado correctamente'
         ]);
+    }
+
+    public function ajustarStock()
+    {
+        $db = \Config\Database::connect();
+        $json = $this->request->getJSON(true);
+
+        $tipo       = strtoupper($json['tipo'] ?? '');         // INGRESO | SALIDA
+        $almacen_id = intval($json['almacen_id'] ?? 0);
+        $motivo     = $json['motivo'] ?? ($tipo === 'INGRESO' ? 'Ingreso de stock' : 'Salida de stock');
+        $items      = $json['items'] ?? [];
+        $tipoEnvio  = session()->get('tipo_envio_sunat') ?? 'prueba';
+        $usuario_id = session()->get('id');
+
+        if (!in_array($tipo, ['INGRESO', 'SALIDA'])) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Tipo de movimiento inválido.']);
+        }
+
+        if (!$almacen_id || empty($items)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Datos incompletos.']);
+        }
+
+        $inventarioModel  = new InventarioModel();
+        $movInvModel      = new MovimientoInventarioModel();
+
+        $db->transStart();
+        try {
+            foreach ($items as $item) {
+                $producto_id = intval($item['producto_id'] ?? 0);
+                $cantidad    = floatval($item['cantidad'] ?? 0);
+                $motivoItem  = $item['motivo'] ?? $motivo;
+
+                if (!$producto_id || $cantidad <= 0) continue;
+
+                // Obtener inventario actual
+                $inv = $inventarioModel->where([
+                    'producto_id'      => $producto_id,
+                    'almacen_id'       => $almacen_id,
+                    'tipo_envio_sunat' => $tipoEnvio
+                ])->first();
+
+                $stockAnterior = $inv ? floatval($inv['stock_actual']) : 0;
+
+                // Calcular nuevo stock
+                $nuevoStock = ($tipo === 'INGRESO')
+                    ? $stockAnterior + $cantidad
+                    : $stockAnterior - $cantidad;
+
+                if ($tipo === 'SALIDA' && $nuevoStock < 0) {
+                    $db->transRollback();
+                    return $this->response->setJSON([
+                        'status'  => 'error',
+                        'message' => "Stock insuficiente para el producto ID $producto_id. Stock actual: $stockAnterior"
+                    ]);
+                }
+
+                // Actualizar o crear inventario
+                if ($inv) {
+                    $inventarioModel->update($inv['id'], ['stock_actual' => $nuevoStock]);
+                } else {
+                    $inventarioModel->insert([
+                        'producto_id'      => $producto_id,
+                        'almacen_id'       => $almacen_id,
+                        'stock_actual'     => $nuevoStock,
+                        'stock_minimo'     => 0,
+                        'stock_maximo'     => 0,
+                        'tipo_envio_sunat' => $tipoEnvio,
+                        'usuario_id'       => $usuario_id
+                    ]);
+                }
+
+                // Registrar movimiento
+                $movInvModel->insert([
+                    'producto_id'      => $producto_id,
+                    'almacen_id'       => $almacen_id,
+                    'tipo'             => $tipo,
+                    'cantidad'         => $cantidad,
+                    'motivo'           => $motivoItem,
+                    'referencia_id'    => '',
+                    'referencia_tipo'  => 'MANUAL',
+                    'num_documento'    => '',
+                    'tipo_envio_sunat' => $tipoEnvio,
+                    'stock_anterior'   => $stockAnterior,
+                    'stock_actual'     => $nuevoStock,
+                    'usuario_id'       => $usuario_id
+                ]);
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                throw new \Exception('Error en la transacción de base de datos.');
+            }
+
+            $accion = $tipo === 'INGRESO' ? 'ingresados' : 'dados de salida';
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => count($items) . ' producto(s) ' . $accion . ' correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            $db->transRollback();
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Error al procesar: ' . $e->getMessage()
+            ]);
+        }
     }
 }

@@ -172,21 +172,12 @@
                         BravoFact
                     </h2>
                 </div>
-                <div class="relative flex-1 max-w-sm hidden lg:flex gap-2">
-                    <div class="relative flex-1">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                        <input id="productSearch"
-                            class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary"
-                            placeholder="Buscar producto..." type="text" />
-                    </div>
-                    <select id="posWarehouse" class="hidden lg:block bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-xs font-bold py-2 focus:ring-2 focus:ring-primary outline-none px-3 min-w-[140px]">
-                        <option value="0">Todos los Almacenes</option>
-                    </select>
-                </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="hidden lg:flex gap-6 mr-6">
                     <a class="text-sm font-semibold border-b-2 border-primary pb-1" href="<?= base_url('pos') ?>">Terminal</a>
+                    <a class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                        href="<?= base_url('ventas') ?>">Ventas</a>
                     <a class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
                         href="<?= base_url('dashboard') ?>">Dashboard</a>
                     <a class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -240,15 +231,33 @@
         <main class="flex flex-1 overflow-hidden">
             <!-- Left Panel: Product Grid -->
             <section class="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-background-dark/50 overflow-hidden">
-                <!-- Warehouse Selector (Mobile only) -->
-                <div class="lg:hidden px-6 pt-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-3 mb-1">
-                        <span class="material-symbols-outlined text-slate-400 text-sm">home_work</span>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Almacén Principal</label>
+
+                <!-- Search & Warehouse Unified Bar -->
+                <div class="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center shrink-0">
+                    <div class="relative flex-1 w-full">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input id="productSearch"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary shadow-sm"
+                            placeholder="Buscar por nombre, código o categoría..." type="text" />
                     </div>
-                    <select id="posWarehouseMobile" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold py-2 px-1 focus:ring-0 outline-none">
-                        <option value="0">Todos los Almacenes</option>
-                    </select>
+
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:flex-none">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">inventory_2</span>
+                            <select id="posWarehouse" class="w-full md:w-48 bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-9 pr-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm">
+                                <option value="0">Todos los Almacenes</option>
+                            </select>
+                        </div>
+
+                        <?php
+                        $tipoEnvio = session()->get('tipo_envio_sunat') ?? 'PRUEBA';
+                        $envioColor = ($tipoEnvio == 'produccion') ? 'emerald' : 'orange';
+                        ?>
+                        <div class="px-3 py-2.5 rounded-xl bg-<?= $envioColor ?>-100 dark:bg-<?= $envioColor ?>-900/40 text-<?= $envioColor ?>-600 dark:text-<?= $envioColor ?>-400 text-[10px] font-black uppercase tracking-widest border border-<?= $envioColor ?>-200 dark:border-<?= $envioColor ?>-800 shadow-sm flex items-center gap-2">
+                            <span class="size-2 rounded-full bg-<?= $envioColor ?>-500 animate-pulse"></span>
+                            <?= $tipoEnvio ?>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Categories Bar -->
@@ -260,15 +269,6 @@
                     <!-- Categories will be loaded here -->
                 </div>
 
-                <!-- Product Search (Mobile only) -->
-                <div class="lg:hidden px-6 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-                        <input id="productSearchMobile"
-                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-0 outline-none"
-                            placeholder="Busca por nombre o código..." type="text" />
-                    </div>
-                </div>
                 <!-- Grid -->
                 <div class="flex-1 overflow-y-auto p-6 pb-32 lg:pb-6">
                     <div id="posProductGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

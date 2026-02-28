@@ -360,8 +360,10 @@ class Ventas extends BaseController
                     'tipo_envio_sunat' => $tipoEnvio
                 ])->first();
 
+                $stockAnterior = $inv ? $inv['stock_actual'] : 0;
+                $newStock = $stockAnterior - $qty;
+
                 if ($inv) {
-                    $newStock = $inv['stock_actual'] - $qty;
                     $inventarioModel->update($inv['id'], ['stock_actual' => $newStock]);
                 }
 
@@ -376,6 +378,8 @@ class Ventas extends BaseController
                     'referencia_tipo' => 'VENTA',
                     'num_documento' => $serie . '-' . $numero,
                     'tipo_envio_sunat' => $tipoEnvio,
+                    'stock_anterior' => $stockAnterior,
+                    'stock_actual' => $newStock,
                     'usuario_id' => $usuario_id
                 ]);
             }

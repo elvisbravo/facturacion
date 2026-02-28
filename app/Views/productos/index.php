@@ -174,22 +174,22 @@
             <div class="flex items-center gap-2 text-slate-500 text-sm mb-1">
                 <a class="hover:text-primary transition-colors" href="#">Home</a>
                 <span class="material-symbols-outlined text-xs leading-none">chevron_right</span>
-                <span class="text-slate-900 dark:text-slate-300 font-medium">Inventory Management</span>
+                <span class="text-slate-900 dark:text-slate-300 font-medium">Inventario Productos</span>
             </div>
             <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
-                Inventory Overview
+                Productos/Inventario
             </h2>
         </div>
         <div class="flex gap-3">
-            <button
-                class="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm">
-                <span class="material-symbols-outlined text-lg leading-none">filter_list</span>
-                Advanced Filters
+            <button id="btnIngresoStock"
+                class="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg transition-colors shadow-sm shadow-emerald-200 dark:shadow-none text-sm">
+                <span class="material-symbols-outlined text-lg leading-none">add_circle</span>
+                Ingreso
             </button>
-            <button
-                class="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm">
-                <span class="material-symbols-outlined text-lg leading-none">download</span>
-                Export CSV
+            <button id="btnSalidaStock"
+                class="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors shadow-sm shadow-rose-200 dark:shadow-none text-sm">
+                <span class="material-symbols-outlined text-lg leading-none">remove_circle</span>
+                Salida
             </button>
             <button id="openProductModalBtn"
                 class="flex items-center gap-2 px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-shadow shadow-lg shadow-primary/20 text-sm">
@@ -311,6 +311,81 @@
     </div>
 </div>
 
+
+<!-- ===== MODAL MOVIMIENTO STOCK (Ingreso / Salida) ===== -->
+<div id="movimientoModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeMovimientoModal()"></div>
+    <div class="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+        <!-- Header -->
+        <div id="movModalHeader" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="movModalIcon" class="size-10 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-xl"></span>
+                </div>
+                <div>
+                    <h3 id="movModalTitle" class="text-lg font-bold text-slate-900 dark:text-white"></h3>
+                    <p class="text-xs text-slate-500">Puede agregar múltiples productos a la vez</p>
+                </div>
+            </div>
+            <button onclick="closeMovimientoModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+
+            <!-- Almacén y Motivo Global -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase">Almacén</label>
+                    <select id="movAlmacen" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2.5 px-3 focus:ring-primary focus:border-primary outline-none">
+                        <option value="">Cargando almacenes...</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase">Motivo General</label>
+                    <input id="movMotivo" type="text" placeholder="Ej. Compra proveedor, Daño mercancía..."
+                        class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2.5 px-3 focus:ring-primary focus:border-primary outline-none">
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <tr>
+                            <th class="px-4 py-3">Producto</th>
+                            <th class="px-4 py-3 w-28 text-center">Cantidad</th>
+                            <th class="px-4 py-3 w-44">Motivo (opcional)</th>
+                            <th class="px-4 py-3 w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="movFilas" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Filas dinámicas -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button onclick="agregarFilaMov()" class="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors">
+                <span class="material-symbols-outlined text-base">add_circle</span>
+                Agregar otro producto
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 bg-slate-50 dark:bg-slate-900/50">
+            <button onclick="closeMovimientoModal()" class="px-5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                Cancelar
+            </button>
+            <button id="btnGuardarMov" onclick="guardarMovimiento()"
+                class="px-6 py-2 font-bold rounded-lg transition-all text-white text-sm shadow-lg">
+                Guardar Movimiento
+            </button>
+        </div>
+    </div>
+</div>
 
 <div id="productModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
     <div id="modalOverlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
@@ -560,5 +635,217 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="<?= base_url('js/productos/lista.js') ?>"></script>
+
+<script>
+    // ===== MODAL MOVIMIENTO STOCK =====
+    let tipoMovimientoActual = '';
+    let productosDisponibles = [];
+    let almacenesDisponibles = [];
+    let filaIndex = 0;
+
+    // Cargar lista de productos y almacenes una vez
+    async function cargarDatosMovimiento() {
+        // Cargar productos
+        if (productosDisponibles.length === 0) {
+            const res = await fetch(`${BASE_URL}/productos/listar?almacen_id=0&categoria_id=0`);
+            const data = await res.json();
+            productosDisponibles = data.status === 'success' ? data.data : [];
+        }
+        // Cargar almacenes
+        if (almacenesDisponibles.length === 0) {
+            const res = await fetch(`${BASE_URL}/almacen/listar`);
+            const data = await res.json();
+            almacenesDisponibles = data.status === 'success' ? data.data : [];
+        }
+        // Poblar select de almacenes
+        const selAlmacen = document.getElementById('movAlmacen');
+        selAlmacen.innerHTML = '<option value="">-- Seleccionar Almacén --</option>';
+        almacenesDisponibles.forEach(a => {
+            selAlmacen.innerHTML += `<option value="${a.id}">${a.nombre}</option>`;
+        });
+    }
+
+    function openMovimientoModal(tipo) {
+        tipoMovimientoActual = tipo;
+        const isIngreso = tipo === 'INGRESO';
+
+        // Estilos según tipo
+        const icon = document.querySelector('#movModalIcon span');
+        const iconContainer = document.getElementById('movModalIcon');
+        const title = document.getElementById('movModalTitle');
+        const btnGuardar = document.getElementById('btnGuardarMov');
+
+        if (isIngreso) {
+            icon.textContent = 'add_circle';
+            iconContainer.className = 'size-10 rounded-xl flex items-center justify-center bg-emerald-100 text-emerald-600';
+            title.textContent = 'Ingreso de Stock';
+            btnGuardar.className = 'px-6 py-2 font-bold rounded-lg transition-all text-white text-sm shadow-lg bg-emerald-500 hover:bg-emerald-600';
+        } else {
+            icon.textContent = 'remove_circle';
+            iconContainer.className = 'size-10 rounded-xl flex items-center justify-center bg-rose-100 text-rose-600';
+            title.textContent = 'Salida de Stock';
+            btnGuardar.className = 'px-6 py-2 font-bold rounded-lg transition-all text-white text-sm shadow-lg bg-rose-500 hover:bg-rose-600';
+        }
+
+        // Limpiar filas y motivo
+        document.getElementById('movFilas').innerHTML = '';
+        document.getElementById('movMotivo').value = '';
+        filaIndex = 0;
+
+        // Mostrar modal
+        document.getElementById('movimientoModal').classList.remove('hidden');
+
+        // Cargar datos y agregar primera fila
+        cargarDatosMovimiento().then(() => agregarFilaMov());
+    }
+
+    function closeMovimientoModal() {
+        document.getElementById('movimientoModal').classList.add('hidden');
+    }
+
+    function agregarFilaMov() {
+        const idx = filaIndex++;
+        const tbody = document.getElementById('movFilas');
+
+        const opciones = productosDisponibles.map(p =>
+            `<option value="${p.id}" data-stock="${p.stock}">${p.nombre_producto} (Stock: ${p.stock})</option>`
+        ).join('');
+
+        const fila = document.createElement('tr');
+        fila.id = `movFila_${idx}`;
+        fila.className = 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors';
+        fila.innerHTML = `
+        <td class="px-4 py-3">
+            <select class="mov-producto w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary focus:border-primary outline-none">
+                <option value="">-- Seleccionar Producto --</option>
+                ${opciones}
+            </select>
+        </td>
+        <td class="px-4 py-3">
+            <input type="number" min="1" value="1" class="mov-cantidad w-full text-center bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary outline-none font-bold">
+        </td>
+        <td class="px-4 py-3">
+            <input type="text" placeholder="Motivo específico..." class="mov-motivo-fila w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary outline-none">
+        </td>
+        <td class="px-4 py-3 text-center">
+            <button onclick="eliminarFilaMov('movFila_${idx}')" class="text-slate-400 hover:text-rose-500 transition-colors">
+                <span class="material-symbols-outlined text-xl">delete</span>
+            </button>
+        </td>
+    `;
+        tbody.appendChild(fila);
+    }
+
+    function eliminarFilaMov(filaId) {
+        const fila = document.getElementById(filaId);
+        if (fila) fila.remove();
+    }
+
+    async function guardarMovimiento() {
+        const almacen_id = document.getElementById('movAlmacen').value;
+        const motivoGlobal = document.getElementById('movMotivo').value.trim() || (tipoMovimientoActual === 'INGRESO' ? 'Ingreso de stock' : 'Salida de stock');
+
+        if (!almacen_id) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Almacén requerido',
+                text: 'Por favor selecciona un almacén.',
+                confirmButtonColor: '#13ec49'
+            });
+            return;
+        }
+
+        const filas = document.querySelectorAll('#movFilas tr');
+        const items = [];
+
+        let valido = true;
+        filas.forEach(fila => {
+            const prodSel = fila.querySelector('.mov-producto');
+            const cantInput = fila.querySelector('.mov-cantidad');
+            const motivoFila = fila.querySelector('.mov-motivo-fila');
+
+            const producto_id = prodSel?.value;
+            const cantidad = parseFloat(cantInput?.value || 0);
+            const motivo = motivoFila?.value.trim() || motivoGlobal;
+
+            if (!producto_id) {
+                valido = false;
+                return;
+            }
+            if (cantidad <= 0) {
+                valido = false;
+                return;
+            }
+
+            items.push({
+                producto_id,
+                cantidad,
+                motivo
+            });
+        });
+
+        if (!valido || items.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Datos incompletos',
+                text: 'Selecciona un producto y cantidad válida en cada fila.',
+                confirmButtonColor: '#13ec49'
+            });
+            return;
+        }
+
+        const btn = document.getElementById('btnGuardarMov');
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+
+        try {
+            const res = await fetch(`${BASE_URL}/productos/ajustar_stock`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tipo: tipoMovimientoActual,
+                    almacen_id,
+                    motivo: motivoGlobal,
+                    items
+                })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                closeMovimientoModal();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Listo!',
+                    text: data.message,
+                    confirmButtonColor: '#13ec49'
+                });
+                // Recargar tabla de productos
+                if (typeof table !== 'undefined') table.ajax.reload(null, false);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message,
+                    confirmButtonColor: '#13ec49'
+                });
+            }
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo conectar con el servidor.',
+                confirmButtonColor: '#13ec49'
+            });
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Guardar Movimiento';
+        }
+    }
+
+    // Botones
+    document.getElementById('btnIngresoStock').addEventListener('click', () => openMovimientoModal('INGRESO'));
+    document.getElementById('btnSalidaStock').addEventListener('click', () => openMovimientoModal('SALIDA'));
+</script>
 <?= $this->endSection() ?>
-```

@@ -64,4 +64,10 @@ class Auth extends BaseController
             "message" => "Login exitoso"
         ]);
     }
+
+    public function salir()
+    {
+        session()->destroy();
+        return redirect()->to('/');
+    }
 }

@@ -8,6 +8,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Auth::login');
 
 $routes->post('auth/acceder', 'Auth::acceder');
+$routes->get('auth/salir', 'Auth::salir');
 
 $routes->get('dashboard', 'Dashboard::admin');
 
@@ -33,6 +34,7 @@ $routes->get('productos/listar', 'Productos::listarProductos');
 $routes->get('productos/get/(:num)', 'Productos::getProducto/$1');
 $routes->post('productos/guardar', 'Productos::guardarProducto');
 $routes->get('productos/delete/(:num)', 'Productos::deleteProducto/$1');
+$routes->post('productos/ajustar_stock', 'Productos::ajustarStock');
 
 $routes->get('unidad_medida/listar', 'UnidadMedida::listar');
 

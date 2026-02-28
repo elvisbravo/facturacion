@@ -61,3 +61,9 @@
     <span class="material-symbols-outlined">settings</span>
     <span>Configuración</span>
 </a>
+<a
+    class="flex items-center gap-3 px-3 py-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+    href="<?= base_url('auth/salir') ?>">
+    <span class="material-symbols-outlined">logout</span>
+    <span>Cerrar Sesión</span>
+</a>

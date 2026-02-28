@@ -623,8 +623,7 @@ window.loadWarehouses = function () {
         .then(res => {
             if (res.status === 'success') {
                 const selectors = [
-                    document.getElementById('posWarehouse'),
-                    document.getElementById('posWarehouseMobile')
+                    document.getElementById('posWarehouse')
                 ].filter(el => el !== null);
 
                 selectors.forEach(select => {
@@ -700,11 +699,10 @@ window.loadProducts = function () {
 
 window.renderProducts = function () {
     const grid = document.getElementById('posProductGrid');
-    const searchDesktop = document.getElementById('productSearch');
-    const searchMobile = document.getElementById('productSearchMobile');
+    const searchInput = document.getElementById('productSearch');
+    const searchTerm = (searchInput?.value || "").toLowerCase();
 
-    const searchTerm = (searchMobile?.value || searchDesktop?.value || "").toLowerCase();
-    grid.innerHTML = '';
+    if (grid) grid.innerHTML = '';
 
     const filtered = productList.filter(p =>
         p.nombre_producto.toLowerCase().includes(searchTerm) ||
@@ -737,10 +735,8 @@ window.renderProducts = function () {
     });
 }
 
-// Search Events
 const searchInputs = [
-    document.getElementById('productSearch'),
-    document.getElementById('productSearchMobile')
+    document.getElementById('productSearch')
 ].filter(el => el !== null);
 
 searchInputs.forEach(input => {
