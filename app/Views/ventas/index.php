@@ -111,6 +111,16 @@
                         <option value="Pendiente">Pendiente</option>
                         <option value="Rechazado">Rechazado</option>
                     </select>
+
+                    <?php if (session()->get('rol_id') == 1): ?>
+                        <select id="sucursalFiltro"
+                            class="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-800 rounded-lg text-xs py-1 px-2 focus:ring-primary outline-none font-bold text-primary border-primary/20">
+                            <option value="">Todas las Sedes</option>
+                            <?php foreach ($sucursales as $s): ?>
+                                <option value="<?= $s['id'] ?>"><?= $s['nombre'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="relative w-full md:w-72">
@@ -360,6 +370,7 @@
                         d.desde = $('#fechaDesde').val();
                         d.hasta = $('#fechaHasta').val();
                         d.estado = $('#estadoFiltro').val();
+                        d.sucursal_id = $('#sucursalFiltro').val();
                     }
                 },
                 "columns": [{
@@ -515,7 +526,7 @@
                 table.page.len(this.value).draw();
             });
 
-            $('#fechaDesde, #fechaHasta, #estadoFiltro').on('change', function() {
+            $('#fechaDesde, #fechaHasta, #estadoFiltro, #sucursalFiltro').on('change', function() {
                 table.ajax.reload();
             });
         }

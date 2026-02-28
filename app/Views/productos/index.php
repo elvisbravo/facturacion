@@ -351,6 +351,14 @@
                 </div>
             </div>
 
+            <!-- Buscador de Productos -->
+            <div class="space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase">Buscar Producto para agregar</label>
+                <div class="relative">
+                    <select id="movSearchProducto" class="w-full"></select>
+                </div>
+            </div>
+
             <!-- Tabla de Productos -->
             <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                 <table class="w-full text-left border-collapse text-sm">
@@ -368,10 +376,10 @@
                 </table>
             </div>
 
-            <button onclick="agregarFilaMov()" class="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors">
+            <!--<button onclick="agregarFilaMov()" class="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors">
                 <span class="material-symbols-outlined text-base">add_circle</span>
                 Agregar otro producto
-            </button>
+            </button>-->
         </div>
 
         <!-- Footer -->
@@ -645,15 +653,14 @@
 
     // Cargar lista de productos y almacenes una vez
     async function cargarDatosMovimiento() {
-        // Cargar productos
-        if (productosDisponibles.length === 0) {
-            const res = await fetch(`${BASE_URL}/productos/listar?almacen_id=0&categoria_id=0`);
-            const data = await res.json();
-            productosDisponibles = data.status === 'success' ? data.data : [];
-        }
+        // Cargar productos - Siempre recargar para tener el stock actualizado
+        const resProd = await fetch(`${baseUrl}/productos/listar?almacen_id=0&categoria_id=0`);
+        const dataProd = await resProd.json();
+        productosDisponibles = dataProd.status === 'success' ? dataProd.data : [];
+
         // Cargar almacenes
         if (almacenesDisponibles.length === 0) {
-            const res = await fetch(`${BASE_URL}/almacen/listar`);
+            const res = await fetch(`${baseUrl}/almacen/listar`);
             const data = await res.json();
             almacenesDisponibles = data.status === 'success' ? data.data : [];
         }
@@ -663,6 +670,32 @@
         almacenesDisponibles.forEach(a => {
             selAlmacen.innerHTML += `<option value="${a.id}">${a.nombre}</option>`;
         });
+
+        // Poblar buscador de productos
+        const selSearch = $('#movSearchProducto');
+        selSearch.empty().append('<option value="">Busque un producto por nombre o código...</option>');
+        productosDisponibles.forEach(p => {
+            selSearch.append(`<option value="${p.id}" data-stock="${p.stock}" data-nombre="${p.nombre_producto}">${p.nombre_producto} (Stock: ${p.stock})</option>`);
+        });
+
+        if (!selSearch.hasClass("select2-hidden-accessible")) {
+            selSearch.select2({
+                dropdownParent: $('#movimientoModal'),
+                width: '100%',
+                placeholder: 'Busque un producto por nombre o código...',
+                allowClear: true
+            }).on('select2:select', function(e) {
+                const data = e.params.data;
+                const option = $(e.currentTarget).find(`option[value="${data.id}"]`);
+                const productData = {
+                    id: data.id,
+                    nombre: option.data('nombre'),
+                    stock: option.data('stock')
+                };
+                agregarFilaMov(productData);
+                $(this).val(null).trigger('change');
+            });
+        }
     }
 
     function openMovimientoModal(tipo) {
@@ -695,34 +728,48 @@
         // Mostrar modal
         document.getElementById('movimientoModal').classList.remove('hidden');
 
-        // Cargar datos y agregar primera fila
-        cargarDatosMovimiento().then(() => agregarFilaMov());
+        // Cargar datos y agregar primera fila (opcional, ahora es via buscador)
+        cargarDatosMovimiento();
     }
 
     function closeMovimientoModal() {
         document.getElementById('movimientoModal').classList.add('hidden');
     }
 
-    function agregarFilaMov() {
+    function agregarFilaMov(producto = null) {
+        if (!producto) return;
+
+        // Evitar duplicados si se prefiere, o simplemente agregar
+        const existe = document.querySelector(`.mov-producto[value="${producto.id}"]`);
+        if (existe) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Producto ya agregado',
+                text: 'El producto ya está en la lista.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            return;
+        }
+
         const idx = filaIndex++;
         const tbody = document.getElementById('movFilas');
-
-        const opciones = productosDisponibles.map(p =>
-            `<option value="${p.id}" data-stock="${p.stock}">${p.nombre_producto} (Stock: ${p.stock})</option>`
-        ).join('');
 
         const fila = document.createElement('tr');
         fila.id = `movFila_${idx}`;
         fila.className = 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors';
         fila.innerHTML = `
         <td class="px-4 py-3">
-            <select class="mov-producto w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary focus:border-primary outline-none">
-                <option value="">-- Seleccionar Producto --</option>
-                ${opciones}
-            </select>
+            <input type="hidden" class="mov-producto" value="${producto.id}">
+            <div class="flex flex-col">
+                <span class="font-semibold text-slate-900 dark:text-white">${producto.nombre}</span>
+                <span class="text-xs text-slate-500">Stock actual: ${producto.stock}</span>
+            </div>
         </td>
         <td class="px-4 py-3">
-            <input type="number" min="1" value="1" class="mov-cantidad w-full text-center bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary outline-none font-bold">
+            <input type="number" min="0.01" step="any" value="1" class="mov-cantidad w-full text-center bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary outline-none font-bold">
         </td>
         <td class="px-4 py-3">
             <input type="text" placeholder="Motivo específico..." class="mov-motivo-fila w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm py-2 px-3 focus:ring-primary outline-none">
@@ -799,7 +846,7 @@
         btn.textContent = 'Guardando...';
 
         try {
-            const res = await fetch(`${BASE_URL}/productos/ajustar_stock`, {
+            const res = await fetch(`${baseUrl}/productos/ajustar_stock`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

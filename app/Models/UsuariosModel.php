@@ -13,7 +13,7 @@ class UsuariosModel extends Model
 
     protected $returnType     = 'array';
 
-    protected $allowedFields = ['id', 'usuario', 'password', 'nombres', 'apellidos', 'perfil_id', 'sucursal_id', 'estado'];
+    protected $allowedFields = ['id', 'usuario', 'password', 'nombres', 'apellidos', 'perfil_id', 'sucursal_id', 'almacen_id', 'estado'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

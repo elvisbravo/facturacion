@@ -179,8 +179,6 @@
                     <a class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
                         href="<?= base_url('ventas') ?>">Ventas</a>
                     <a class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
-                        href="<?= base_url('dashboard') ?>">Dashboard</a>
-                    <a class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
                         href="<?= base_url('productos') ?>">Inventario</a>
                     <a class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
                         href="<?= base_url('caja-aperturar') ?>">Caja</a>
@@ -244,7 +242,7 @@
                     <div class="flex items-center gap-3 w-full md:w-auto">
                         <div class="relative flex-1 md:flex-none">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">inventory_2</span>
-                            <select id="posWarehouse" class="w-full md:w-48 bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-9 pr-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm">
+                            <select id="posWarehouse" <?= session()->get('rol_id') == 2 ? 'disabled' : '' ?> class="w-full md:w-48 bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-9 pr-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
                                 <option value="0">Todos los Almacenes</option>
                             </select>
                         </div>
@@ -358,10 +356,6 @@
                 <a href="<?= base_url('pos') ?>" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-slate-900 font-bold shadow-lg shadow-primary/10">
                     <span class="material-symbols-outlined font-fill">terminal</span>
                     Terminal POS
-                </a>
-                <a href="<?= base_url('dashboard') ?>" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-medium transition-colors">
-                    <span class="material-symbols-outlined">dashboard</span>
-                    Dashboard
                 </a>
                 <a href="<?= base_url('productos') ?>" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-medium transition-colors">
                     <span class="material-symbols-outlined">inventory_2</span>
@@ -621,6 +615,7 @@
         </div>
         <script>
             const BASE_URL = "<?= base_url() ?>";
+            const DEFAULT_ALMACEN = <?= session()->get('almacen_id') ?? 0 ?>;
             <?php if (isset($cajaVencida) && $cajaVencida): ?>
                 document.addEventListener('DOMContentLoaded', () => {
                     Swal.fire({

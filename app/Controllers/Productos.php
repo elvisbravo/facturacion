@@ -109,6 +109,13 @@ class Productos extends BaseController
 
             $producto = new ProductoModel();
 
+            $es_pos = $this->request->getGet('es_pos');
+            $sqlFiltroPos = "";
+            if ($es_pos == 1) {
+                // Ocultar producto "Entrada" en el POS según solicitud del usuario
+                $sqlFiltroPos = " AND p.nombre_producto NOT LIKE '%Entrada%'";
+            }
+
             // Usamos LEFT JOIN para que aparezcan productos sin stock o sin presentaciones aún
             // Agrupamos por ID de producto para sumar los stocks de los almacenes
             $sql = "SELECT 
@@ -135,7 +142,7 @@ class Productos extends BaseController
                         INNER JOIN almacenes ON almacenes.id = inventario.almacen_id
                         WHERE almacenes.sucursal_id = $sucursal_id
                     ) i ON i.producto_id = p.id AND i.tipo_envio_sunat = '$tipoEnvio' $sqlAlmacen
-                    WHERE p.estado = 1 $sqlCategoria
+                    WHERE p.estado = 1 $sqlCategoria $sqlFiltroPos
                     GROUP BY p.id";
 
             $datos = $producto->query($sql)->getResultArray();

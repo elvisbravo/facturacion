@@ -8,10 +8,10 @@
     <style>
         body {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 12px;
-            width: 80mm;
+            font-size: 10px;
+            width: 58mm;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
         }
 
         .header {
@@ -20,8 +20,8 @@
         }
 
         .header h1 {
-            font-size: 16px;
-            margin: 5px 0;
+            font-size: 13px;
+            margin: 2px 0;
         }
 
         .separator {
@@ -44,18 +44,18 @@
 
         .total {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .footer {
             text-align: center;
-            margin-top: 20px;
-            font-size: 10px;
+            margin-top: 15px;
+            font-size: 9px;
         }
 
         @media print {
             body {
-                width: 80mm;
+                width: 58mm;
             }
         }
     </style>
@@ -147,7 +147,7 @@
                 },
                 jsPDF: {
                     unit: 'mm',
-                    format: [80, 150],
+                    format: [58, 150],
                     orientation: 'portrait'
                 }
             };

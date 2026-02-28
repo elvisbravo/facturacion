@@ -6,7 +6,12 @@ class Ventas extends BaseController
 {
     public function index()
     {
-        return view('ventas/index');
+        $data = [];
+        if (session()->get('rol_id') == 1) {
+            $sucursalModel = new \App\Models\SucursalesModel();
+            $data['sucursales'] = $sucursalModel->where('estado', 1)->findAll();
+        }
+        return view('ventas/index', $data);
     }
 
     public function detalle($id)
@@ -42,9 +47,21 @@ class Ventas extends BaseController
     {
         $db = \Config\Database::connect();
         $session_sucursal = session()->get('sucursal_id');
-        $sucursal_id = !empty($session_sucursal) ? $session_sucursal : 1; // Fallback para pruebas
+        $session_rol = session()->get('rol_id');
+        $session_usuario = session()->get('id');
+        $session_envio = session()->get('tipo_envio_sunat') ?? 'prueba';
 
         $request = $this->request->getGet();
+        // Determinar la sucursal a filtrar (solo para admins)
+        $filtro_sucursal = $request['sucursal_id'] ?? '';
+
+        // Si no es admin, forzar su propia sucursal
+        if ($session_rol != 1) {
+            $sucursal_id_final = $session_sucursal;
+        } else {
+            $sucursal_id_final = !empty($filtro_sucursal) ? $filtro_sucursal : '';
+        }
+
         $draw = intval($request['draw'] ?? 1);
         $start = intval($request['start'] ?? 0);
         $length = intval($request['length'] ?? 10);
@@ -66,8 +83,22 @@ class Ventas extends BaseController
         $builder = $db->table('ventas')
             ->select('ventas.*, sunat_tipodocelectronico.descripcion as tipo_comprobante, clientes.nombres as cliente_nombre, clientes.numero_documento as cliente_doc')
             ->join('sunat_tipodocelectronico', 'sunat_tipodocelectronico.id_tipodoc_electronico = ventas.tipo_comprobante_id', 'left')
-            ->join('clientes', 'clientes.id = ventas.cliente_id', 'left')
-            ->where('ventas.sucursal_id', $sucursal_id);
+            ->join('clientes', 'clientes.id = ventas.cliente_id', 'left');
+
+        // Filtrar por el ambiente de envío actual (prueba/produccion)
+        $builder->where('ventas.tipo_envio_sunat', $session_envio);
+
+        // Aplicar filtros de Sucursal y Usuario según ROLES
+        if ($session_rol == 2) {
+            // Cajero: solo sus ventas y su sucursal
+            $builder->where('ventas.sucursal_id', $session_sucursal);
+            $builder->where('ventas.usuario_id', $session_usuario);
+        } else {
+            // Admin: opcionalmente por sucursal
+            if (!empty($sucursal_id_final)) {
+                $builder->where('ventas.sucursal_id', $sucursal_id_final);
+            }
+        }
 
         // 2. Aplicar Filtros Globales (Búsqueda)
         if (!empty($searchValue)) {
@@ -256,9 +287,10 @@ class Ventas extends BaseController
             // 1. Obtener Serie y Número
             $configModel = new \App\Models\ConfiguracionComprobantesModel();
             $config = $configModel->where([
-                'comprobante_id' => $docType_id,
-                'sucursal_id' => $sucursal_id,
-                'estado' => 1
+                'comprobante_id'   => $docType_id,
+                'sucursal_id'      => $sucursal_id,
+                'tipo_envio_sunat' => $tipoEnvio,
+                'estado'           => 1
             ])->first();
 
             if (!$config) {
@@ -501,8 +533,8 @@ class Ventas extends BaseController
         require_once ROOTPATH . 'vendor/setasign/fpdf/fpdf.php';
 
         // ── Dimensiones ───────────────────────────────────────────────────
-        $pageW  = 80;
-        $margin = 4;
+        $pageW  = 58;
+        $margin = 2;
         $w      = $pageW - ($margin * 2);
 
         // ── Crear PDF ─────────────────────────────────────────────────────

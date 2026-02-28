@@ -4,9 +4,23 @@
         class="p-2 -ml-2 rounded-lg text-slate-600 dark:text-slate-400 lg:hidden">
         <span class="material-symbols-outlined">menu</span>
     </button>
-    <h2 class="text-lg lg:text-xl font-bold tracking-tight">
-        Resumen de Operaciones
-    </h2>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+        <h2 class="text-lg lg:text-xl font-bold tracking-tight">
+            Recreo San Andres
+        </h2>
+        <?php $tipoEnvio = session()->get('tipo_envio_sunat') ?? 'prueba'; ?>
+        <?php if ($tipoEnvio == 'produccion'): ?>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-widest shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                Producción
+            </span>
+        <?php else: ?>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 uppercase tracking-widest shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5 animate-pulse"></span>
+                Prueba
+            </span>
+        <?php endif; ?>
+    </div>
 </div>
 <div class="flex items-center gap-3">
     <button
