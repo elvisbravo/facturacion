@@ -19,11 +19,12 @@ class Dashboard extends BaseController
         $fechaFin    = $request['fecha_fin'] ?? date('Y-m-d');
         $sucursal_id = $request['sucursal_id'] ?? '';
         $almacen_id  = $request['almacen_id'] ?? '';
+        $tipo_envio  = session()->get('tipo_envio_sunat') ?? 'prueba';
 
         $db = \Config\Database::connect();
 
         // Función base para aplicar filtros
-        $applyFilters = function ($builder, $tableName) use ($fechaInicio, $fechaFin, $sucursal_id, $almacen_id) {
+        $applyFilters = function ($builder, $tableName) use ($fechaInicio, $fechaFin, $sucursal_id, $almacen_id, $tipo_envio) {
             // Asegurar que usamos el nombre de la tabla correcto para los campos comunes
             $builder->where("DATE(ventas.fecha_venta) >=", $fechaInicio)
                 ->where("DATE(ventas.fecha_venta) <=", $fechaFin);
@@ -35,6 +36,10 @@ class Dashboard extends BaseController
 
             if (!empty($sucursal_id)) {
                 $builder->where('ventas.sucursal_id', $sucursal_id);
+            }
+
+            if (!empty($tipo_envio)) {
+                $builder->where('ventas.tipo_envio_sunat', $tipo_envio);
             }
 
             if (!empty($almacen_id)) {
