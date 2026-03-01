@@ -22,6 +22,7 @@ $routes->get('ventas/ticket/(:num)', 'Ventas::ticket/$1');
 $routes->post('ventas/guardar', 'Ventas::guardar');
 
 $routes->get('entradas', 'Entradas::index');
+$routes->get('entradas/listar', 'Entradas::listar');
 $routes->post('entradas/guardar', 'Entradas::guardar');
 
 $routes->get('caja-aperturar', 'Caja::aperturar');

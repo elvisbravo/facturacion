@@ -50,11 +50,66 @@ class Entradas extends BaseController
 
     public function guardar()
     {
-        // Reutilizar la lógica de Ventas.guardar pero simplificada
-        // O simplemente redirigir a un comando interno.
-        // Mejor la implemento aquí para que sea independiente.
-
         $ventasController = new Ventas();
         return $ventasController->guardar();
+    }
+
+    public function listar()
+    {
+        $db = \Config\Database::connect();
+        $sucursal_id = session()->get('sucursal_id');
+        $tipoEnvio = session()->get('tipo_envio_sunat') ?? 'prueba';
+        $page = $this->request->getGet('page') ?? 1;
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $builder = $db->table('ventas')
+            ->select('ventas.id, ventas.fecha_venta, ventas.serie_comprobante, ventas.numero_comprobante, ventas.total, detalle_venta.descripcion as entrada, detalle_venta.cantidad')
+            ->join('detalle_venta', 'detalle_venta.venta_id = ventas.id')
+            ->where('ventas.sucursal_id', $sucursal_id)
+            ->where('ventas.tipo_envio_sunat', $tipoEnvio)
+            ->groupStart()
+            ->like('detalle_venta.descripcion', 'ENTRADA')
+            ->orLike('detalle_venta.descripcion', 'TICKET')
+            ->groupEnd();
+
+        // Contar el total de registros para la paginación
+        $totalRows = $db->table('ventas')
+            ->join('detalle_venta', 'detalle_venta.venta_id = ventas.id')
+            ->where('ventas.sucursal_id', $sucursal_id)
+            ->where('ventas.tipo_envio_sunat', $tipoEnvio)
+            ->groupStart()
+            ->like('detalle_venta.descripcion', 'ENTRADA')
+            ->orLike('detalle_venta.descripcion', 'TICKET')
+            ->groupEnd()
+            ->countAllResults();
+
+        // Sumar el total general (todas las ventas de entradas)
+        $totalGeneralQuery = $db->table('ventas')
+            ->join('detalle_venta', 'detalle_venta.venta_id = ventas.id')
+            ->where('ventas.sucursal_id', $sucursal_id)
+            ->where('ventas.tipo_envio_sunat', $tipoEnvio)
+            ->groupStart()
+            ->like('detalle_venta.descripcion', 'ENTRADA')
+            ->orLike('detalle_venta.descripcion', 'TICKET')
+            ->groupEnd()
+            ->selectSum('ventas.total')
+            ->get()->getRow();
+
+        $ventas = $builder->orderBy('ventas.fecha_venta', 'DESC')
+            ->limit($perPage, $offset)
+            ->get()->getResultArray();
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $ventas,
+            'total_general' => (float)($totalGeneralQuery->total ?? 0),
+            'pagination' => [
+                'current_page' => (int)$page,
+                'per_page' => $perPage,
+                'total_rows' => $totalRows,
+                'total_pages' => ceil($totalRows / $perPage)
+            ]
+        ]);
     }
 }

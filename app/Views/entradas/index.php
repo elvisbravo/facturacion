@@ -13,6 +13,12 @@
                 <h2 class="text-2xl font-black uppercase tracking-tight">Vender Entradas</h2>
                 <p class="text-xs font-bold opacity-80 uppercase tracking-widest">Módulo de emisión rápida</p>
             </div>
+            <div class="ml-auto">
+                <button onclick="verVentasRecientes()" class="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                    <span class="material-symbols-outlined text-sm">history</span>
+                    Ver Entradas Vendidas
+                </button>
+            </div>
         </div>
 
         <!-- Form Body -->
@@ -123,11 +129,82 @@
         </div>
 
     </div>
-
 </div>
+
+<!-- Modal Ventas Recientes -->
+<div id="modalVentas" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="cerrarModalVentas()"></div>
+    <div class="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+        <!-- Header (Fixed) -->
+        <div class="shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
+            <div class="flex items-center gap-4">
+                <h3 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">history</span>
+                    Últimas Entradas Vendidas
+                </h3>
+                <div id="headerTotalBadge" class="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20 animate-in fade-in slide-in-from-left-2 duration-300">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Recaudado</span>
+                    <span id="totalHeaderMonto" class="text-sm font-black text-primary">S/ 0.00</span>
+                </div>
+            </div>
+            <button onclick="cerrarModalVentas()" class="size-10 flex items-center justify-center rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Body (Scrollable) -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <div class="min-w-full inline-block align-middle">
+                <div class="overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider backdrop-blur-sm">
+                            <tr>
+                                <th class="px-6 py-4">Fecha</th>
+                                <th class="px-6 py-4">Entrada</th>
+                                <th class="px-6 py-4 text-center">Cant.</th>
+                                <th class="px-6 py-4 text-right">Total</th>
+                                <th class="px-6 py-4 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaVentasCuerpo" class="divide-y divide-slate-100 dark:divide-slate-800 font-bold">
+                            <!-- Contenido AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer (Fixed) -->
+        <div class="shrink-0 p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest" id="infoPaginacion">Mostrando...</p>
+            <div class="flex gap-2">
+                <button id="btnPrev" onclick="cambiarPagina(-1)" class="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-4 py-2 rounded-xl text-xs font-black disabled:opacity-30 hover:bg-primary hover:text-slate-900 transition-all">Anterior</button>
+                <button id="btnNext" onclick="cambiarPagina(1)" class="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-4 py-2 rounded-xl text-xs font-black disabled:opacity-30 hover:bg-primary hover:text-slate-900 transition-all">Siguiente</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
+    /* Estilo para el scrollbar del modal */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #334155;
+    }
+
     .doc-radio.selected {
         border-color: #13ec49;
         background-color: rgba(19, 236, 73, 0.05);
@@ -339,6 +416,67 @@
                 });
             }
         });
+    }
+
+    let paginaActual = 1;
+    let totalPaginas = 1;
+
+    function verVentasRecientes(page = 1) {
+        paginaActual = page;
+        $('#listaVentasCuerpo').html('<tr><td colspan="5" class="px-6 py-10 text-center text-slate-400 italic">Cargando ventas...</td></tr>');
+        $('#modalVentas').removeClass('hidden');
+
+        $.ajax({
+            url: BASE_URL + '/entradas/listar?page=' + paginaActual,
+            type: 'GET',
+            success: function(res) {
+                if (res.status === 'success') {
+                    let html = '';
+                    if (res.data.length === 0) {
+                        html = '<tr><td colspan="5" class="px-6 py-10 text-center text-slate-400 italic">No se encontraron ventas de entradas.</td></tr>';
+                        $('#infoPaginacion').text('Sin registros');
+                    } else {
+                        res.data.forEach(v => {
+                            html += `
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="px-6 py-4 text-[11px] text-slate-500">${v.fecha_venta}</td>
+                                <td class="px-6 py-4">
+                                    <div class="text-slate-900 dark:text-white uppercase">${v.entrada}</div>
+                                    <div class="text-[10px] text-slate-400">${v.serie_comprobante}-${v.numero_comprobante.padStart(8, '0')}</div>
+                                </td>
+                                <td class="px-6 py-4 text-center text-slate-600 dark:text-slate-400">${parseInt(v.cantidad)}</td>
+                                <td class="px-6 py-4 text-right text-primary font-black">S/ ${parseFloat(v.total).toFixed(2)}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button onclick="window.open('${BASE_URL}/ventas/ticket/${v.id}', '_blank')" class="bg-primary/10 hover:bg-primary text-primary hover:text-slate-900 size-8 rounded-lg flex items-center justify-center transition-all">
+                                        <span class="material-symbols-outlined text-sm">print</span>
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                        const totalFormatted = 'S/ ' + parseFloat(res.total_general).toFixed(2);
+                        $('#totalHeaderMonto').text(totalFormatted);
+
+                        // Actualizar Paginación
+                        totalPaginas = res.pagination.total_pages;
+                        $('#infoPaginacion').text(`Página ${paginaActual} de ${totalPaginas} (${res.pagination.total_rows} entradas)`);
+                        $('#btnPrev').prop('disabled', paginaActual <= 1);
+                        $('#btnNext').prop('disabled', paginaActual >= totalPaginas);
+                    }
+                    $('#listaVentasCuerpo').html(html);
+                }
+            }
+        });
+    }
+
+    function cambiarPagina(delta) {
+        let nuevaPagina = paginaActual + delta;
+        if (nuevaPagina > 0 && nuevaPagina <= totalPaginas) {
+            verVentasRecientes(nuevaPagina);
+        }
+    }
+
+    function cerrarModalVentas() {
+        $('#modalVentas').addClass('hidden');
     }
 </script>
 
