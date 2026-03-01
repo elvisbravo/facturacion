@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="h-full flex items-center justify-center p-4 lg:p-8">
-    <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-300">
+    <div class="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-300">
 
         <!-- Header -->
         <div class="p-6 bg-primary text-slate-900 border-b border-primary/20 flex items-center gap-4">
@@ -16,112 +16,115 @@
         </div>
 
         <!-- Form Body -->
-        <div class="p-8 space-y-6">
+        <div class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-            <!-- Comprobante Selector -->
-            <div class="space-y-2">
-                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Tipo de Comprobante</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <?php foreach ($tiposComprobante as $tipo): ?>
-                        <label class="doc-radio relative flex items-center justify-center p-3 border-2 border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
-                            <input type="radio" name="docType" value="<?= $tipo['id_tipodoc_electronico'] ?>" class="sr-only" <?= $tipo['id_tipodoc_electronico'] === '77' ? 'checked' : '' ?>>
-                            <span class="text-xs font-black text-slate-600 dark:text-slate-400 uppercase"><?= $tipo['descripcion'] ?></span>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <!-- Cliente Section -->
-            <div id="clienteSection" class="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Identificación del Cliente</label>
-                <div class="flex gap-2">
-                    <div class="relative flex-1">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">badge</span>
-                        <input type="text" id="clienteDoc" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-black focus:ring-4 focus:ring-primary/20 transition-all outline-none" placeholder="DNI / RUC" value="00000001">
+                <!-- Left Column: Product & Price -->
+                <div class="space-y-6">
+                    <!-- Comprobante Selector -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Tipo de Comprobante</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <?php foreach ($tiposComprobante as $tipo): ?>
+                                <label class="doc-radio relative flex items-center justify-center p-3 border-2 border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                                    <input type="radio" name="docType" value="<?= $tipo['id_tipodoc_electronico'] ?>" class="sr-only" <?= $tipo['id_tipodoc_electronico'] === '77' ? 'checked' : '' ?>>
+                                    <span class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase text-center"><?= $tipo['descripcion'] ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                    <button type="button" onclick="buscarCliente()" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-4 rounded-2xl hover:bg-primary hover:text-slate-900 transition-all">
-                        <span class="material-symbols-outlined">search</span>
+
+                    <!-- Entrada Selector -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Tipo de Entrada</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">event_seat</span>
+                            <select id="entradaId" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-4 focus:ring-primary/20 transition-all outline-none">
+                                <?php if (empty($entradas)): ?>
+                                    <option value="0" disabled selected>No se encontraron Entradas/Tickets...</option>
+                                <?php else: ?>
+                                    <option value="0" disabled>Seleccionar Entrada...</option>
+                                    <?php foreach ($entradas as $index => $e): ?>
+                                        <option value="<?= $e['id'] ?>" data-price="<?= $e['precio_venta'] ?>" <?= $index === 0 ? 'selected' : '' ?>><?= $e['nombre_producto'] ?> (Stock: <?= $e['stock_actual'] ?>)</option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Precio Override -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Precio Unitario</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">S/</span>
+                                <input type="number" id="entradaPrecio" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-10 pr-4 py-4 text-lg font-black focus:ring-4 focus:ring-primary/20 transition-all outline-none" placeholder="0.00" step="0.01">
+                            </div>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Cantidad</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">add_shopping_cart</span>
+                                <input type="number" id="entradaCantidad" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-lg font-black focus:ring-4 focus:ring-primary/20 transition-all outline-none" value="1" min="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Client & Totals -->
+                <div class="space-y-6">
+                    <!-- Cliente Section -->
+                    <div id="clienteSection" class="space-y-2">
+                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Identificación del Cliente</label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">badge</span>
+                                <input type="text" id="clienteDoc" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-black focus:ring-4 focus:ring-primary/20 transition-all outline-none" placeholder="DNI / RUC" value="00000001">
+                            </div>
+                            <button type="button" onclick="buscarCliente()" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-4 rounded-2xl hover:bg-primary hover:text-slate-900 transition-all">
+                                <span class="material-symbols-outlined">search</span>
+                            </button>
+                        </div>
+                        <div id="clienteCargado" class="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-xl border border-primary/20">
+                            <span class="material-symbols-outlined text-primary text-sm">person</span>
+                            <span id="clienteNombre" class="text-[11px] font-black text-primary uppercase">CLIENTE VARIOS</span>
+                            <input type="hidden" id="clienteId" value="1">
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Selector -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Método de Pago</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">payments</span>
+                            <select id="metodoPagoId" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-4 focus:ring-primary/20 transition-all outline-none">
+                                <?php foreach ($metodosPago as $metodo): ?>
+                                    <option value="<?= $metodo['id'] ?>" <?= $metodo['nombre'] === 'EFECTIVO' ? 'selected' : '' ?>><?= $metodo['nombre'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Total Preview -->
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 text-center">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total a cobrar</p>
+                        <h3 id="totalCobrar" class="text-4xl font-black text-slate-900 dark:text-white">S/ 0.00</h3>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button onclick="procesarVentaEntrada()" class="w-full bg-primary text-slate-900 font-black py-5 rounded-2xl text-xl shadow-xl shadow-primary/30 hover:shadow-primary/50 flex items-center justify-center gap-3 transition-all active:scale-[0.98] uppercase tracking-wide">
+                        <span class="material-symbols-outlined font-black">print</span>
+                        Emitir Entrada
                     </button>
                 </div>
-                <div id="clienteCargado" class="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-xl border border-primary/20">
-                    <span class="material-symbols-outlined text-primary text-sm">person</span>
-                    <span id="clienteNombre" class="text-[11px] font-black text-primary uppercase">CLIENTE VARIOS</span>
-                    <input type="hidden" id="clienteId" value="1">
-                </div>
             </div>
-
-            <!-- Entrada Selector -->
-            <div class="space-y-2">
-                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Tipo de Entrada</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">event_seat</span>
-                    <select id="entradaId" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-4 focus:ring-primary/20 transition-all outline-none">
-                        <?php if (empty($entradas)): ?>
-                            <option value="0" disabled selected>No se encontraron Entradas/Tickets...</option>
-                        <?php else: ?>
-                            <option value="0" disabled>Seleccionar Entrada...</option>
-                            <?php foreach ($entradas as $index => $e): ?>
-                                <option value="<?= $e['id'] ?>" data-price="<?= $e['precio_venta'] ?>" <?= $index === 0 ? 'selected' : '' ?>><?= $e['nombre_producto'] ?> (Stock: <?= $e['stock_actual'] ?>)</option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <!-- Precio Override -->
-                <div class="space-y-2">
-                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Precio Unitario</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">S/</span>
-                        <input type="number" id="entradaPrecio" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-10 pr-4 py-4 text-lg font-black focus:ring-4 focus:ring-primary/20 transition-all outline-none" placeholder="0.00" step="0.01">
-                    </div>
-                </div>
-
-                <!-- Cantidad -->
-                <div class="space-y-2">
-                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Cantidad</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">add_shopping_cart</span>
-                        <input type="number" id="entradaCantidad" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-lg font-black focus:ring-4 focus:ring-primary/20 transition-all outline-none" value="1" min="1">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment Method Selector -->
-            <div class="space-y-2">
-                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Método de Pago</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">payments</span>
-                    <select id="metodoPagoId" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-4 focus:ring-primary/20 transition-all outline-none">
-                        <?php foreach ($metodosPago as $metodo): ?>
-                            <option value="<?= $metodo['id'] ?>" <?= $metodo['nombre'] === 'EFECTIVO' ? 'selected' : '' ?>><?= $metodo['nombre'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Total Preview -->
-            <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 text-center animate-in slide-in-from-bottom-2 duration-500">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total a cobrar</p>
-                <h3 id="totalCobrar" class="text-5xl font-black text-slate-900 dark:text-white">S/ 0.00</h3>
-            </div>
-
-            <!-- Action Button -->
-            <button onclick="procesarVentaEntrada()" class="w-full bg-primary text-slate-900 font-black py-5 rounded-2xl text-xl shadow-xl shadow-primary/30 hover:shadow-primary/50 flex items-center justify-center gap-3 transition-all active:scale-[0.98] uppercase tracking-wide">
-                <span class="material-symbols-outlined font-black">print</span>
-                Emitir Entrada
-            </button>
-
         </div>
 
-        <!-- Footer -->
-        <div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 text-center">
-            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                Usuario activo: <span class="text-slate-600 dark:text-slate-300"><?= session()->get('nombres') ?></span> | Sucursal: <span class="text-slate-600 dark:text-slate-300">Principal</span>
-            </p>
-        </div>
     </div>
+
+</div>
 </div>
 
 <style>
