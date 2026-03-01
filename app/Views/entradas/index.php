@@ -88,6 +88,19 @@
                 </div>
             </div>
 
+            <!-- Payment Method Selector -->
+            <div class="space-y-2">
+                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Método de Pago</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">payments</span>
+                    <select id="metodoPagoId" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-4 focus:ring-primary/20 transition-all outline-none">
+                        <?php foreach ($metodosPago as $metodo): ?>
+                            <option value="<?= $metodo['id'] ?>" <?= $metodo['nombre'] === 'EFECTIVO' ? 'selected' : '' ?>><?= $metodo['nombre'] ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
             <!-- Total Preview -->
             <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 text-center animate-in slide-in-from-bottom-2 duration-500">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total a cobrar</p>
@@ -285,7 +298,7 @@
                         image: 'producto.png'
                     }],
                     paymentMethods: [{
-                        id: 1, // Efectivo por defecto para entradas rápidas
+                        id: $('#metodoPagoId').val(),
                         amount: precio * cantidad
                     }],
                     cliente_id: clienteId,

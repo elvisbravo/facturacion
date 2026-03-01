@@ -10,6 +10,7 @@ use App\Models\DetalleVentaModel;
 use App\Models\InventarioModel;
 use App\Models\MovimientoInventarioModel;
 use App\Models\PresentacionProductoModel;
+use App\Models\MetodosPagoModel;
 
 class Entradas extends BaseController
 {
@@ -18,6 +19,9 @@ class Entradas extends BaseController
         $comprobanteModel = new ComprobanteModel();
         // Obtener Boleta (03), Factura (01) y Nota de Venta (77)
         $data['tiposComprobante'] = $comprobanteModel->whereIn('id_tipodoc_electronico', ['03', '01', '77'])->findAll();
+
+        $metodoPagoModel = new MetodosPagoModel();
+        $data['metodosPago'] = $metodoPagoModel->where('estado', 1)->findAll();
 
         $session_sucursal = session()->get('sucursal_id');
         $sucursal_id = !empty($session_sucursal) ? $session_sucursal : 1;
